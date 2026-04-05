@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -16,8 +17,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email) return null;
-        // In production, validate against your database
-        // For now, allow any email for demo purposes
         return {
           id: `user-${Date.now()}`,
           email: credentials.email as string,
@@ -37,12 +36,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         request.nextUrl.pathname.startsWith("/dashboard");
       const isAssess = request.nextUrl.pathname.startsWith("/assess");
 
-      // Assessment pages are public (candidate-facing)
       if (isAssess) return true;
-
-      // Protected routes require login
       if (isProtected && !isLoggedIn) return false;
-
       return true;
     },
     jwt({ token, user }) {

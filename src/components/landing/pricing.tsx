@@ -22,24 +22,24 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$49",
+    price: "\u20B9199",
     period: "/month",
     description: "For active recruiters and small agencies who need speed.",
     features: [
       "Unlimited JD analyses",
       "All 6 intelligence modules",
-      "Advanced Boolean strings",
+      "Candidate Match Intelligence",
+      "AI-powered screening assessments",
       "Multi-channel outreach (Email, LinkedIn, WhatsApp)",
       "Analysis history & saved workspaces",
       "Priority support",
-      "Custom outreach tone settings",
     ],
     cta: "Start 14-Day Trial",
     highlighted: true,
   },
   {
     name: "Agency",
-    price: "$149",
+    price: "\u20B9499",
     period: "/month",
     description: "For staffing agencies and TA teams scaling their pipeline.",
     features: [
