@@ -1,25 +1,27 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const jetbrainsMono = JetBrains_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "HireMIQ — Decode JDs. Find Better Talent.",
+  title: "HireMIQ — AI Recruitment Intelligence Platform",
   description:
     "AI Recruitment Intelligence Platform for Recruiters and Staffing Agencies. Convert messy JDs into recruiter-ready sourcing and outreach workflows in minutes.",
   metadataBase: new URL("https://hiremiq.com"),
   openGraph: {
-    title: "HireMIQ — Decode JDs. Find Better Talent.",
+    title: "HireMIQ — AI Recruitment Intelligence Platform",
     description:
       "AI-powered recruitment intelligence. Turn messy job descriptions into recruiter-ready sourcing workflows in minutes.",
     url: "https://hiremiq.com",
@@ -27,10 +29,10 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary_large_image",
-    title: "HireMIQ — Decode JDs. Find Better Talent.",
+    card: "summary",
+    title: "HireMIQ — AI Recruitment Intelligence Platform",
     description:
-      "AI Recruitment Intelligence Platform. 6 intelligence modules. Boolean strings. Candidate outreach. All from one JD.",
+      "AI Recruitment Intelligence Platform. 6 intelligence modules. Candidate scoring. Automated assessments.",
   },
   keywords: [
     "AI recruitment",
@@ -54,9 +56,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col font-sans">
         <Providers>{children}</Providers>
       </body>
     </html>

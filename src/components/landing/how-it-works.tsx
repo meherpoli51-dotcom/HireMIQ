@@ -4,67 +4,68 @@ import { Upload, Sparkles, BarChart3, Send } from "lucide-react";
 
 const steps = [
   {
-    step: "01",
     icon: Upload,
-    title: "Paste or Upload JD",
+    title: "Paste or upload JD",
     description:
-      "Drop in any job description — paste raw text, upload a PDF, or fill in structured fields. HireMIQ handles messy, incomplete, or verbose JDs.",
+      "Drop in any job description — raw text, PDF, or structured fields. HireMIQ handles messy, incomplete, or verbose JDs.",
   },
   {
-    step: "02",
     icon: Sparkles,
-    title: "AI Analyzes Instantly",
+    title: "AI analyzes instantly",
     description:
-      "Our AI engine decodes the JD into six intelligence reports — role summary, skill mapping, company insights, target companies, Boolean strings, and outreach drafts.",
+      "Six intelligence reports generated in seconds — role summary, skill mapping, company insights, Boolean strings, and outreach templates.",
   },
   {
-    step: "03",
     icon: BarChart3,
-    title: "Review & Refine",
+    title: "Score candidates",
     description:
-      "Review each intelligence module in a clean, tabbed workspace. Edit search strings, tweak outreach messages, and refine targeting to your needs.",
+      "Upload resumes to score candidates across 7 weighted dimensions. Get instant submission readiness verdicts with explainable breakdowns.",
   },
   {
-    step: "04",
     icon: Send,
-    title: "Source & Reach Out",
+    title: "Assess and submit",
     description:
-      "Copy Boolean strings directly into LinkedIn or Naukri. Send personalized outreach via email, LinkedIn, or WhatsApp. Start sourcing in minutes, not hours.",
+      "Generate AI screening assessments, validate candidates before client submission, and source with confidence.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-20 lg:py-28 bg-slate-50/70">
+    <section id="how-it-works" className="py-24 lg:py-32 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
             Workflow
           </p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-            From JD to candidates in four steps
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-4">
+            From JD to submission in four steps
           </h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            A streamlined workflow designed for speed. No training needed —
-            paste a JD and get recruiter-ready outputs instantly.
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+            No training needed. Paste a JD, get recruiter-ready outputs
+            instantly.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {steps.map((step) => {
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {steps.map((step, i) => {
             const Icon = step.icon;
             return (
-              <div key={step.step} className="relative text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-sm mb-5">
-                  <Icon className="w-6 h-6 text-blue-600" />
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:shadow-slate-100 transition-all"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-300 tracking-widest">
+                    0{i + 1}
+                  </span>
                 </div>
-                <div className="text-xs font-bold text-blue-600 mb-2 tracking-wider">
-                  STEP {step.step}
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                <h3 className="text-sm font-bold text-slate-900 mb-2">
                   {step.title}
                 </h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-sm text-slate-500 leading-relaxed">
                   {step.description}
                 </p>
               </div>
