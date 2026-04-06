@@ -32,6 +32,7 @@ const defaultInput: JDInput = {
 
 export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
   const [input, setInput] = useState<JDInput>(defaultInput);
+  const [triedSubmit, setTriedSubmit] = useState(false);
   const [uploadState, setUploadState] = useState<
     "idle" | "uploading" | "parsing" | "done" | "error"
   >("idle");
@@ -311,13 +312,15 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
           />
         </div>
 
-        {/* Client Name with autocomplete */}
+        {/* Client Name with autocomplete — REQUIRED */}
         <AutocompleteInput
           label="Client Name"
           placeholder="Start typing company name..."
           value={input.clientName}
           onChange={(v) => update("clientName", v)}
           suggestions={clientSuggestions}
+          required
+          showError={triedSubmit}
         />
 
         {/* End Client */}
@@ -330,13 +333,15 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
           optional
         />
 
-        {/* Location with autocomplete */}
+        {/* Location with autocomplete — REQUIRED */}
         <AutocompleteInput
           label="Location"
           placeholder="Start typing city..."
           value={input.location}
           onChange={(v) => update("location", v)}
           suggestions={locationSuggestions}
+          required
+          showError={triedSubmit}
         />
 
         {/* Budget */}
@@ -487,9 +492,19 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
 
       {/* CTA */}
       <div className="px-5 py-4 border-t border-slate-100">
+        {triedSubmit && (!input.clientName.trim() || !input.location.trim()) && (
+          <p className="text-xs text-rose-500 mb-2">
+            Please fill in Client Name and Location to proceed.
+          </p>
+        )}
         <Button
-          onClick={() => onAnalyze(input)}
-          disabled={isAnalyzing || (!input.jdText && !input.jobTitle)}
+          onClick={() => {
+            setTriedSubmit(true);
+            if (!input.clientName.trim() || !input.location.trim()) return;
+            if (!input.jdText && !input.jobTitle) return;
+            onAnalyze(input);
+          }}
+          disabled={isAnalyzing}
           className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm disabled:opacity-50 text-sm"
         >
           {isAnalyzing ? (

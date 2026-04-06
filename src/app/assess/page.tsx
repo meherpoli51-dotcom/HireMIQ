@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Clock,
@@ -12,6 +12,10 @@ import {
   BarChart3,
   TrendingUp,
   AlertTriangle,
+  Eye,
+  EyeOff,
+  Clipboard,
+  Monitor,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +46,18 @@ interface EvaluationResult {
   summary: string;
 }
 
+// Anti-cheating integrity data
+interface IntegrityData {
+  tabSwitches: number;
+  pasteAttempts: number;
+  copyAttempts: number;
+  rightClickAttempts: number;
+  focusLostDuration: number; // total seconds window was hidden
+  warnings: string[];
+  startedAt: string;
+  submittedAt?: string;
+}
+
 type PageState =
   | "loading"
   | "ready"
@@ -50,7 +66,6 @@ type PageState =
   | "submitted"
   | "error";
 
-// Decode assessment data from URL parameter
 function decodeAssessData(encoded: string): AssessData | null {
   try {
     const json = decodeURIComponent(escape(atob(encoded)));
@@ -86,9 +101,161 @@ function AssessPageContent() {
   const [errorMsg, setErrorMsg] = useState("");
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
 
+  // Anti-cheating state
+  const [integrity, setIntegrity] = useState<IntegrityData>({
+    tabSwitches: 0,
+    pasteAttempts: 0,
+    copyAttempts: 0,
+    rightClickAttempts: 0,
+    focusLostDuration: 0,
+    warnings: [],
+    startedAt: "",
+  });
+  const [showWarning, setShowWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
+  const focusLostAt = useRef<number | null>(null);
+  const warningTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Show anti-cheat warning banner
+  const triggerWarning = useCallback((message: string) => {
+    setWarningMessage(message);
+    setShowWarning(true);
+    setIntegrity((prev) => ({
+      ...prev,
+      warnings: [...prev.warnings, `${new Date().toISOString()}: ${message}`],
+    }));
+    if (warningTimeout.current) clearTimeout(warningTimeout.current);
+    warningTimeout.current = setTimeout(() => setShowWarning(false), 5000);
+  }, []);
+
+  // ─── Anti-cheating: Tab switch / visibility detection ───
+  useEffect(() => {
+    if (pageState !== "in_progress") return;
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        // Tab lost focus
+        focusLostAt.current = Date.now();
+        setIntegrity((prev) => ({
+          ...prev,
+          tabSwitches: prev.tabSwitches + 1,
+        }));
+        triggerWarning(
+          "Tab switch detected. This activity is recorded and shared with the recruiter."
+        );
+      } else {
+        // Tab regained focus — calculate time away
+        if (focusLostAt.current) {
+          const awaySeconds = Math.round(
+            (Date.now() - focusLostAt.current) / 1000
+          );
+          setIntegrity((prev) => ({
+            ...prev,
+            focusLostDuration: prev.focusLostDuration + awaySeconds,
+          }));
+          focusLostAt.current = null;
+        }
+      }
+    };
+
+    const handleBlur = () => {
+      if (pageState === "in_progress") {
+        setIntegrity((prev) => ({
+          ...prev,
+          tabSwitches: prev.tabSwitches + 1,
+        }));
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [pageState, triggerWarning]);
+
+  // ─── Anti-cheating: Block copy, paste, right-click ───
+  useEffect(() => {
+    if (pageState !== "in_progress") return;
+
+    const handlePaste = (e: ClipboardEvent) => {
+      e.preventDefault();
+      setIntegrity((prev) => ({
+        ...prev,
+        pasteAttempts: prev.pasteAttempts + 1,
+      }));
+      triggerWarning(
+        "Paste blocked. Type your answers manually. This attempt is recorded."
+      );
+    };
+
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      setIntegrity((prev) => ({
+        ...prev,
+        copyAttempts: prev.copyAttempts + 1,
+      }));
+      triggerWarning(
+        "Copy is disabled during the assessment. This attempt is recorded."
+      );
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      setIntegrity((prev) => ({
+        ...prev,
+        rightClickAttempts: prev.rightClickAttempts + 1,
+      }));
+    };
+
+    // Block keyboard shortcuts for copy/paste/devtools
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block Ctrl+C, Ctrl+V, Ctrl+A (select all for copy)
+      if (e.ctrlKey || e.metaKey) {
+        if (["v", "V"].includes(e.key)) {
+          e.preventDefault();
+          setIntegrity((prev) => ({
+            ...prev,
+            pasteAttempts: prev.pasteAttempts + 1,
+          }));
+          triggerWarning("Paste blocked. Type your answers manually.");
+        }
+        if (["c", "C"].includes(e.key)) {
+          e.preventDefault();
+          setIntegrity((prev) => ({
+            ...prev,
+            copyAttempts: prev.copyAttempts + 1,
+          }));
+        }
+      }
+      // Block F12 and Ctrl+Shift+I (DevTools)
+      if (e.key === "F12") {
+        e.preventDefault();
+        triggerWarning("Developer tools are disabled during assessment.");
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && ["i", "I", "j", "J"].includes(e.key)) {
+        e.preventDefault();
+        triggerWarning("Developer tools are disabled during assessment.");
+      }
+    };
+
+    document.addEventListener("paste", handlePaste, true);
+    document.addEventListener("copy", handleCopy, true);
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown, true);
+
+    return () => {
+      document.removeEventListener("paste", handlePaste, true);
+      document.removeEventListener("copy", handleCopy, true);
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [pageState, triggerWarning]);
+
   // Load assessment data
   useEffect(() => {
-    // Method 1: Self-contained data in URL (new approach)
     if (dataParam) {
       const data = decodeAssessData(dataParam);
       if (data && data.questions?.length > 0) {
@@ -102,7 +269,6 @@ function AssessPageContent() {
       return;
     }
 
-    // Method 2: Legacy token-based fetch (backward compat)
     if (tokenParam) {
       fetch(`/api/assess?token=${encodeURIComponent(tokenParam)}`)
         .then((r) => {
@@ -150,12 +316,21 @@ function AssessPageContent() {
   };
 
   const handleStart = () => {
+    setIntegrity((prev) => ({
+      ...prev,
+      startedAt: new Date().toISOString(),
+    }));
     setPageState("in_progress");
   };
 
   const handleSubmit = useCallback(async () => {
     if (!assessment) return;
     setPageState("submitting");
+
+    const finalIntegrity = {
+      ...integrity,
+      submittedAt: new Date().toISOString(),
+    };
 
     try {
       const answerArray = assessment.questions.map((q) => ({
@@ -172,6 +347,7 @@ function AssessPageContent() {
           jobTitle: assessment.jobTitle,
           questions: assessment.questions,
           answers: answerArray,
+          integrity: finalIntegrity,
         }),
       });
 
@@ -183,7 +359,7 @@ function AssessPageContent() {
       setErrorMsg("Failed to submit assessment. Please try again.");
       setPageState("in_progress");
     }
-  }, [assessment, tokenParam, answers]);
+  }, [assessment, tokenParam, answers, integrity]);
 
   // Auto-submit when time runs out
   useEffect(() => {
@@ -222,12 +398,11 @@ function AssessPageContent() {
     );
   }
 
-  // Submitted state — show evaluation results
+  // Submitted state — show evaluation results + integrity report
   if (pageState === "submitted") {
     return (
       <div className="min-h-screen bg-slate-50 py-10 px-4">
         <div className="max-w-2xl mx-auto space-y-6">
-          {/* Header */}
           <div className="text-center">
             <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
             <h1 className="text-xl font-bold text-slate-900 mb-2">
@@ -239,7 +414,6 @@ function AssessPageContent() {
             </p>
           </div>
 
-          {/* Evaluation Results */}
           {evaluation && (
             <div className="space-y-4">
               {/* Overall Score */}
@@ -272,6 +446,100 @@ function AssessPageContent() {
                 >
                   {evaluation.recommendation}
                 </span>
+              </div>
+
+              {/* Integrity Report */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-blue-600" />
+                  Assessment Integrity
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-center",
+                      integrity.tabSwitches === 0
+                        ? "bg-emerald-50"
+                        : integrity.tabSwitches <= 2
+                          ? "bg-amber-50"
+                          : "bg-rose-50"
+                    )}
+                  >
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      {integrity.tabSwitches === 0 ? (
+                        <Eye className="w-3 h-3 text-emerald-600" />
+                      ) : (
+                        <EyeOff className="w-3 h-3 text-rose-600" />
+                      )}
+                    </div>
+                    <p className="text-lg font-bold text-slate-900">
+                      {integrity.tabSwitches}
+                    </p>
+                    <p className="text-[10px] text-slate-500">Tab Switches</p>
+                  </div>
+                  <div
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-center",
+                      integrity.pasteAttempts === 0
+                        ? "bg-emerald-50"
+                        : "bg-rose-50"
+                    )}
+                  >
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Clipboard className="w-3 h-3 text-slate-500" />
+                    </div>
+                    <p className="text-lg font-bold text-slate-900">
+                      {integrity.pasteAttempts}
+                    </p>
+                    <p className="text-[10px] text-slate-500">Paste Attempts</p>
+                  </div>
+                  <div
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-center",
+                      integrity.copyAttempts === 0
+                        ? "bg-emerald-50"
+                        : "bg-amber-50"
+                    )}
+                  >
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Clipboard className="w-3 h-3 text-slate-500" />
+                    </div>
+                    <p className="text-lg font-bold text-slate-900">
+                      {integrity.copyAttempts}
+                    </p>
+                    <p className="text-[10px] text-slate-500">Copy Attempts</p>
+                  </div>
+                  <div
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-center",
+                      integrity.focusLostDuration < 10
+                        ? "bg-emerald-50"
+                        : integrity.focusLostDuration < 30
+                          ? "bg-amber-50"
+                          : "bg-rose-50"
+                    )}
+                  >
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <Monitor className="w-3 h-3 text-slate-500" />
+                    </div>
+                    <p className="text-lg font-bold text-slate-900">
+                      {integrity.focusLostDuration}s
+                    </p>
+                    <p className="text-[10px] text-slate-500">Away Time</p>
+                  </div>
+                </div>
+                {integrity.tabSwitches === 0 &&
+                integrity.pasteAttempts === 0 ? (
+                  <p className="text-xs text-emerald-600 mt-3 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Clean assessment — no suspicious activity detected
+                  </p>
+                ) : (
+                  <p className="text-xs text-amber-600 mt-3 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Suspicious activity detected — flagged for recruiter review
+                  </p>
+                )}
               </div>
 
               {/* Summary */}
@@ -339,7 +607,10 @@ function AssessPageContent() {
                   </h3>
                   <ul className="space-y-1.5">
                     {evaluation.strengths.map((s, i) => (
-                      <li key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
+                      <li
+                        key={i}
+                        className="text-xs text-slate-600 flex items-start gap-1.5"
+                      >
                         <CheckCircle2 className="w-3 h-3 text-emerald-400 mt-0.5 shrink-0" />
                         {s}
                       </li>
@@ -353,7 +624,10 @@ function AssessPageContent() {
                   </h3>
                   <ul className="space-y-1.5">
                     {evaluation.concerns.map((c, i) => (
-                      <li key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
+                      <li
+                        key={i}
+                        className="text-xs text-slate-600 flex items-start gap-1.5"
+                      >
                         <AlertTriangle className="w-3 h-3 text-amber-400 mt-0.5 shrink-0" />
                         {c}
                       </li>
@@ -362,20 +636,15 @@ function AssessPageContent() {
                 </div>
               </div>
 
-              {/* Info */}
               <div className="text-center">
                 <p className="text-xs text-slate-400">
                   Assessment for {assessment?.jobTitle} at{" "}
                   {assessment?.clientName}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  The recruiter has been notified of your results.
-                </p>
               </div>
             </div>
           )}
 
-          {/* Fallback if no evaluation */}
           {!evaluation && (
             <div className="bg-white border border-slate-200 rounded-xl p-6 text-center">
               <p className="text-sm text-slate-600">
@@ -425,6 +694,30 @@ function AssessPageContent() {
             </p>
           </div>
 
+          {/* Anti-cheating notice */}
+          <div className="bg-slate-900 rounded-lg px-4 py-3 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="w-4 h-4 text-blue-400" />
+              <p className="text-xs font-semibold text-white">
+                Proctored Assessment
+              </p>
+            </div>
+            <ul className="text-[11px] text-slate-300 space-y-1.5">
+              <li className="flex items-start gap-1.5">
+                <EyeOff className="w-3 h-3 mt-0.5 shrink-0 text-slate-400" />
+                Tab switches and window changes are tracked
+              </li>
+              <li className="flex items-start gap-1.5">
+                <Clipboard className="w-3 h-3 mt-0.5 shrink-0 text-slate-400" />
+                Copy-paste is disabled — type your answers
+              </li>
+              <li className="flex items-start gap-1.5">
+                <Monitor className="w-3 h-3 mt-0.5 shrink-0 text-slate-400" />
+                All activity is recorded and shared with the recruiter
+              </li>
+            </ul>
+          </div>
+
           <div className="bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 mb-6">
             <p className="text-xs text-amber-800">
               Once you start, the timer begins. Answer all questions thoroughly
@@ -448,9 +741,24 @@ function AssessPageContent() {
   const timeWarning = timeLeft < 300;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Sticky header with timer */}
-      <div className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+    <div className="min-h-screen bg-slate-50 select-none">
+      {/* Anti-cheat warning banner */}
+      {showWarning && (
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-rose-600 text-white text-center py-2.5 px-4 shadow-lg animate-in slide-in-from-top duration-300">
+          <div className="flex items-center justify-center gap-2 max-w-3xl mx-auto">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <p className="text-xs font-medium">{warningMessage}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky header with timer + integrity indicators */}
+      <div
+        className={cn(
+          "sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm transition-all",
+          showWarning && "mt-9"
+        )}
+      >
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-blue-600" />
@@ -458,7 +766,15 @@ function AssessPageContent() {
               {assessment.jobTitle}
             </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Integrity indicator */}
+            {integrity.tabSwitches > 0 && (
+              <span className="flex items-center gap-1 text-[10px] font-medium text-rose-600 bg-rose-50 px-2 py-1 rounded-full">
+                <EyeOff className="w-3 h-3" />
+                {integrity.tabSwitches} switch
+                {integrity.tabSwitches !== 1 ? "es" : ""}
+              </span>
+            )}
             <span className="text-xs text-slate-500">
               {answeredCount}/{assessment.questions.length} answered
             </span>
@@ -508,9 +824,11 @@ function AssessPageContent() {
               onChange={(e) =>
                 setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
               }
-              placeholder="Type your answer here..."
+              onPaste={(e) => e.preventDefault()}
+              placeholder="Type your answer here... (paste is disabled)"
               rows={5}
-              className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-y"
+              className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-y select-text"
+              style={{ WebkitUserSelect: "text", userSelect: "text" }}
             />
 
             {(answers[q.id] || "").trim().length > 0 && (

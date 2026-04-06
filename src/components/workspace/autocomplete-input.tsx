@@ -10,6 +10,8 @@ interface AutocompleteInputProps {
   onChange: (value: string) => void;
   suggestions: string[];
   optional?: boolean;
+  required?: boolean;
+  showError?: boolean;
 }
 
 export function AutocompleteInput({
@@ -19,6 +21,8 @@ export function AutocompleteInput({
   onChange,
   suggestions,
   optional,
+  required,
+  showError,
 }: AutocompleteInputProps) {
   const [open, setOpen] = useState(false);
   const [filtered, setFiltered] = useState<string[]>([]);
@@ -50,6 +54,7 @@ export function AutocompleteInput({
     <div ref={ref} className="relative">
       <label className="block text-xs font-medium text-slate-600 mb-1.5">
         {label}
+        {required && <span className="text-rose-500 ml-0.5">*</span>}
         {optional && (
           <span className="text-slate-400 font-normal ml-1">(optional)</span>
         )}
@@ -62,7 +67,12 @@ export function AutocompleteInput({
           if (value.length >= 3 && filtered.length > 0) setOpen(true);
         }}
         placeholder={placeholder}
-        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+        className={cn(
+          "w-full h-9 px-3 rounded-lg border bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all",
+          showError && !value.trim()
+            ? "border-rose-300 bg-rose-50/30"
+            : "border-slate-200"
+        )}
       />
       {open && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
