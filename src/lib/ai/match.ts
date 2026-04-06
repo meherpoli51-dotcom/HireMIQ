@@ -92,10 +92,9 @@ export async function matchCandidate(
   resumeText: string,
   resumeFileName: string
 ): Promise<CandidateMatch> {
-  const stream = client.messages.stream({
+  const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 8000,
-    thinking: { type: "adaptive" },
+    max_tokens: 4096,
     system: MATCH_SYSTEM_PROMPT,
     messages: [
       {
@@ -105,10 +104,8 @@ export async function matchCandidate(
     ],
   });
 
-  const finalMessage = await stream.finalMessage();
-
   let responseText = "";
-  for (const block of finalMessage.content) {
+  for (const block of response.content) {
     if (block.type === "text") {
       responseText = block.text;
       break;

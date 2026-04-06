@@ -14,10 +14,9 @@ import {
 const client = new Anthropic();
 
 async function callClaude(modulePrompt: string, context: string): Promise<string> {
-  const stream = client.messages.stream({
+  const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 16000,
-    thinking: { type: "adaptive" },
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [
       {
@@ -27,9 +26,7 @@ async function callClaude(modulePrompt: string, context: string): Promise<string
     ],
   });
 
-  const finalMessage = await stream.finalMessage();
-
-  for (const block of finalMessage.content) {
+  for (const block of response.content) {
     if (block.type === "text") {
       return block.text;
     }
