@@ -17,6 +17,7 @@ interface ResumeFile {
   id: string;
   status: "pending" | "parsing" | "ready" | "error";
   text?: string;
+  error?: string;
 }
 
 interface ResumeUploadPanelProps {
@@ -32,19 +33,37 @@ export function ResumeUploadPanel({
   const [isDragOver, setIsDragOver] = useState(false);
 
   const parseFile = async (file: File): Promise<string> => {
-    // For now, read as text. PDF parsing would require a library.
-    // In production, we'd use pdf-parse or send to an API.
-    return file.text();
+    // For plain text files, read directly on client
+    if (file.name.toLowerCase().endsWith(".txt") || file.type === "text/plain") {
+      return file.text();
+    }
+
+    // For PDF/DOCX, send to server for proper parsing
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/parse-resume", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to parse resume");
+    }
+
+    return data.text;
   };
 
   const addFiles = useCallback(async (newFiles: FileList | File[]) => {
-    const fileArray = Array.from(newFiles).filter(
-      (f) =>
-        f.type === "application/pdf" ||
-        f.type === "text/plain" ||
-        f.name.endsWith(".txt") ||
-        f.name.endsWith(".pdf")
-    );
+    const validExtensions = [".pdf", ".txt", ".docx", ".doc"];
+    const fileArray = Array.from(newFiles).filter((f) => {
+      const ext = f.name.toLowerCase().substring(f.name.lastIndexOf("."));
+      return validExtensions.includes(ext);
+    });
+
+    if (fileArray.length === 0) return;
 
     const resumeFiles: ResumeFile[] = fileArray.map((f) => ({
       file: f,
@@ -54,7 +73,7 @@ export function ResumeUploadPanel({
 
     setFiles((prev) => [...prev, ...resumeFiles]);
 
-    // Parse each file
+    // Parse each file via server-side API
     for (const rf of resumeFiles) {
       try {
         const text = await parseFile(rf.file);
@@ -63,10 +82,14 @@ export function ResumeUploadPanel({
             f.id === rf.id ? { ...f, status: "ready" as const, text } : f
           )
         );
-      } catch {
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to parse";
         setFiles((prev) =>
           prev.map((f) =>
-            f.id === rf.id ? { ...f, status: "error" as const } : f
+            f.id === rf.id
+              ? { ...f, status: "error" as const, error: errorMsg }
+              : f
           )
         );
       }
@@ -96,6 +119,7 @@ export function ResumeUploadPanel({
   };
 
   const readyCount = files.filter((f) => f.status === "ready").length;
+  const parsingCount = files.filter((f) => f.status === "parsing").length;
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
@@ -127,7 +151,7 @@ export function ResumeUploadPanel({
           const input = document.createElement("input");
           input.type = "file";
           input.multiple = true;
-          input.accept = ".pdf,.txt";
+          input.accept = ".pdf,.txt,.docx,.doc";
           input.onchange = (e) => {
             const target = e.target as HTMLInputElement;
             if (target.files?.length) addFiles(target.files);
@@ -146,7 +170,7 @@ export function ResumeUploadPanel({
           <span className="text-blue-600">browse files</span>
         </p>
         <p className="text-xs text-slate-400 mt-1">
-          PDF or TXT files. Upload multiple to compare.
+          PDF, DOCX, or TXT files. Upload multiple to compare.
         </p>
       </div>
 
@@ -156,17 +180,30 @@ export function ResumeUploadPanel({
           {files.map((rf) => (
             <div
               key={rf.id}
-              className="flex items-center gap-3 px-3 py-2 bg-slate-50 rounded-lg"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg",
+                rf.status === "error" ? "bg-red-50" : "bg-slate-50"
+              )}
             >
               <FileText className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="text-sm text-slate-700 truncate flex-1">
-                {rf.file.name}
-              </span>
+              <div className="flex-1 min-w-0">
+                <span className="text-sm text-slate-700 truncate block">
+                  {rf.file.name}
+                </span>
+                {rf.status === "error" && rf.error && (
+                  <span className="text-[10px] text-red-500 block truncate">
+                    {rf.error}
+                  </span>
+                )}
+              </div>
               {rf.status === "parsing" && (
-                <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin shrink-0" />
+                <span className="flex items-center gap-1 shrink-0">
+                  <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
+                  <span className="text-[10px] text-blue-600">Parsing...</span>
+                </span>
               )}
               {rf.status === "ready" && (
-                <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">
                   Ready
                 </span>
               )}
@@ -191,13 +228,18 @@ export function ResumeUploadPanel({
       {files.length > 0 && (
         <Button
           onClick={handleMatch}
-          disabled={isMatching || readyCount === 0}
+          disabled={isMatching || readyCount === 0 || parsingCount > 0}
           className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm"
         >
           {isMatching ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Scoring {readyCount} candidate{readyCount !== 1 ? "s" : ""}...
+            </>
+          ) : parsingCount > 0 ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Parsing {parsingCount} file{parsingCount !== 1 ? "s" : ""}...
             </>
           ) : (
             <>
