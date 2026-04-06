@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dir,
   },
-  serverExternalPackages: ["@anthropic-ai/sdk"],
+  serverExternalPackages: ["@anthropic-ai/sdk", "pdf-parse", "mammoth"],
 };
 
 export default nextConfig;

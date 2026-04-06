@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Upload, Sparkles, Loader2 } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { Upload, Sparkles, Loader2, FileText, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AutocompleteInput } from "./autocomplete-input";
 import { clientSuggestions, locationSuggestions, sampleJDText } from "@/lib/mock-data";
@@ -32,6 +32,13 @@ const defaultInput: JDInput = {
 
 export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
   const [input, setInput] = useState<JDInput>(defaultInput);
+  const [uploadState, setUploadState] = useState<
+    "idle" | "uploading" | "parsing" | "done" | "error"
+  >("idle");
+  const [uploadedFile, setUploadedFile] = useState<string>("");
+  const [uploadError, setUploadError] = useState<string>("");
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const update = (field: keyof JDInput, value: string) => {
     setInput((prev) => ({ ...prev, [field]: value }));
@@ -53,6 +60,129 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
       employmentType: "Full-time",
       priorityLevel: "High",
     });
+    setUploadState("idle");
+    setUploadedFile("");
+  };
+
+  const processFile = useCallback(async (file: File) => {
+    // Validate file type
+    const validTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/msword",
+      "text/plain",
+    ];
+    const validExtensions = [".pdf", ".docx", ".doc", ".txt"];
+    const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
+
+    if (!validTypes.includes(file.type) && !validExtensions.includes(ext)) {
+      setUploadState("error");
+      setUploadError("Please upload a PDF, DOCX, or TXT file.");
+      return;
+    }
+
+    // Validate size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadState("error");
+      setUploadError("File too large. Maximum size is 10MB.");
+      return;
+    }
+
+    setUploadState("uploading");
+    setUploadedFile(file.name);
+    setUploadError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      setUploadState("parsing");
+
+      const response = await fetch("/api/parse-jd", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to parse document");
+      }
+
+      // Auto-fill all extracted fields
+      setInput((prev) => {
+        const updated = { ...prev, jdText: data.jdText || prev.jdText };
+
+        if (data.extractedFields) {
+          const f = data.extractedFields;
+          if (f.jobTitle) updated.jobTitle = f.jobTitle;
+          if (f.clientName) updated.clientName = f.clientName;
+          if (f.endClient) updated.endClient = f.endClient;
+          if (f.location) updated.location = f.location;
+          if (f.budgetMin) updated.budgetMin = f.budgetMin;
+          if (f.budgetMax) updated.budgetMax = f.budgetMax;
+          if (f.budgetType) updated.budgetType = f.budgetType;
+          if (f.experienceMin) updated.experienceMin = f.experienceMin;
+          if (f.experienceMax) updated.experienceMax = f.experienceMax;
+          if (f.noticePeriod) updated.noticePeriod = f.noticePeriod;
+          if (f.workMode) updated.workMode = f.workMode;
+          if (f.employmentType) updated.employmentType = f.employmentType;
+        }
+
+        return updated;
+      });
+
+      setUploadState("done");
+    } catch (err) {
+      setUploadState("error");
+      setUploadError(
+        err instanceof Error ? err.message : "Failed to parse document"
+      );
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        processFile(files[0]);
+      }
+    },
+    [processFile]
+  );
+
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        processFile(files[0]);
+      }
+      // Reset input so same file can be re-uploaded
+      e.target.value = "";
+    },
+    [processFile]
+  );
+
+  const clearUpload = () => {
+    setUploadState("idle");
+    setUploadedFile("");
+    setUploadError("");
   };
 
   return (
@@ -91,13 +221,80 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
           <label className="block text-xs font-medium text-slate-600 mb-1.5">
             Upload JD
           </label>
-          <div className="border-2 border-dashed border-slate-200 rounded-lg p-4 text-center hover:border-blue-300 hover:bg-blue-50/30 transition-all cursor-pointer">
-            <Upload className="w-5 h-5 text-slate-400 mx-auto mb-1.5" />
-            <p className="text-xs text-slate-500">
-              Drop PDF or DOCX here, or{" "}
-              <span className="text-blue-600 font-medium">browse</span>
-            </p>
-          </div>
+
+          {uploadState === "idle" || uploadState === "error" ? (
+            <>
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-lg p-4 text-center transition-all cursor-pointer ${
+                  isDragging
+                    ? "border-blue-400 bg-blue-50"
+                    : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/30"
+                }`}
+              >
+                <Upload
+                  className={`w-5 h-5 mx-auto mb-1.5 ${
+                    isDragging ? "text-blue-500" : "text-slate-400"
+                  }`}
+                />
+                <p className="text-xs text-slate-500">
+                  Drop PDF, DOCX, or TXT here, or{" "}
+                  <span className="text-blue-600 font-medium">browse</span>
+                </p>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  AI auto-fills all fields from your document
+                </p>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.doc,.txt"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              {uploadState === "error" && (
+                <p className="text-xs text-red-500 mt-1.5">{uploadError}</p>
+              )}
+            </>
+          ) : uploadState === "uploading" || uploadState === "parsing" ? (
+            <div className="border border-blue-200 bg-blue-50/50 rounded-lg p-3 flex items-center gap-3">
+              <Loader2 className="w-4 h-4 text-blue-500 animate-spin shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-slate-700 truncate">
+                  {uploadedFile}
+                </p>
+                <p className="text-[10px] text-blue-600">
+                  {uploadState === "uploading"
+                    ? "Uploading..."
+                    : "Extracting text & auto-filling fields..."}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="border border-green-200 bg-green-50/50 rounded-lg p-3 flex items-center gap-3">
+              <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <FileText className="w-3 h-3 text-slate-500" />
+                  <p className="text-xs font-medium text-slate-700 truncate">
+                    {uploadedFile}
+                  </p>
+                </div>
+                <p className="text-[10px] text-green-600">
+                  Parsed & fields auto-filled
+                </p>
+              </div>
+              <button
+                onClick={clearUpload}
+                className="p-1 hover:bg-green-100 rounded transition-colors"
+              >
+                <X className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Paste JD */}
