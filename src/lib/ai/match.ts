@@ -92,14 +92,19 @@ export async function matchCandidate(
   resumeText: string,
   resumeFileName: string
 ): Promise<CandidateMatch> {
+  // Trim resume to first 6000 chars — key info is always at top
+  const trimmedResume = resumeText.length > 6000
+    ? resumeText.substring(0, 6000) + "\n\n[Resume truncated for processing speed]"
+    : resumeText;
+
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 4096,
+    model: "claude-3-5-haiku-20241022",
+    max_tokens: 3000,
     system: MATCH_SYSTEM_PROMPT,
     messages: [
       {
         role: "user",
-        content: buildMatchPrompt(analysis, resumeText),
+        content: buildMatchPrompt(analysis, trimmedResume),
       },
     ],
   });

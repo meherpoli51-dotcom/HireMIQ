@@ -22,6 +22,8 @@ import {
   Loader2,
   Link2,
   Copy,
+  Mail,
+  Send,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CandidateMatch, DimensionScore, AnalysisResult } from "@/lib/types";
@@ -173,8 +175,52 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
   const [assessLink, setAssessLink] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [candidateEmail, setCandidateEmail] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const verdict = verdictConfig[candidate.verdict];
   const VerdictIcon = verdict.icon;
+
+  const handleSendEmail = async () => {
+    if (!assessLink || !candidateEmail) return;
+    setSendingEmail(true);
+    try {
+      const res = await fetch("/api/send-assessment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          candidateEmail,
+          candidateName: candidate.candidateName,
+          jobTitle: analysis?.jobTitle || "",
+          clientName: analysis?.clientName || "",
+          assessLink,
+        }),
+      });
+      const data = await res.json();
+      if (data.sent) {
+        setEmailSent(true);
+      } else if (data.fallback === "mailto") {
+        // Open mailto link as fallback
+        window.open(data.mailtoLink, "_blank");
+        setEmailSent(true);
+      }
+    } catch {
+      // fallback to mailto
+      const subject = encodeURIComponent(
+        `Screening Assessment - ${analysis?.jobTitle}`
+      );
+      const body = encodeURIComponent(
+        `Hi ${candidate.candidateName},\n\nPlease complete your assessment:\n${assessLink}`
+      );
+      window.open(
+        `mailto:${candidateEmail}?subject=${subject}&body=${body}`,
+        "_blank"
+      );
+      setEmailSent(true);
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
@@ -329,9 +375,9 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
             </p>
           </div>
 
-          {/* Assessment generation */}
+          {/* Assessment generation + email */}
           {candidate.verdict !== "Reject" && (
-            <div className="flex items-center gap-3">
+            <div className="space-y-3">
               {!assessLink ? (
                 <button
                   onClick={async (e) => {
@@ -347,7 +393,6 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
                       if (!res.ok) throw new Error("Failed");
                       const data = await res.json();
 
-                      // Encode assessment data directly in URL (self-contained, no DB needed)
                       const assessPayload = {
                         id: data.id,
                         candidateName: data.candidateName,
@@ -385,27 +430,69 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
                   Generate Assessment Link
                 </button>
               ) : (
-                <div className="flex items-center gap-2 flex-1">
-                  <Link2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <input
-                    readOnly
-                    value={assessLink}
-                    className="flex-1 text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded px-2 py-1.5 font-mono"
-                    onClick={(e) => (e.target as HTMLInputElement).select()}
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigator.clipboard.writeText(assessLink);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                    className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-medium text-slate-700 rounded transition-colors"
-                  >
-                    <Copy className="w-3 h-3" />
-                    {copied ? "Copied!" : "Copy"}
-                  </button>
-                </div>
+                <>
+                  {/* Assessment link with copy */}
+                  <div className="flex items-center gap-2">
+                    <Link2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <input
+                      readOnly
+                      value={assessLink}
+                      className="flex-1 text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded px-2 py-1.5 font-mono"
+                      onClick={(e) => (e.target as HTMLInputElement).select()}
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(assessLink);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-medium text-slate-700 rounded transition-colors shrink-0"
+                    >
+                      <Copy className="w-3 h-3" />
+                      {copied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+
+                  {/* Email to candidate */}
+                  {!emailSent ? (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <input
+                        type="email"
+                        value={candidateEmail}
+                        onChange={(e) => setCandidateEmail(e.target.value)}
+                        placeholder="candidate@email.com"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 text-xs text-slate-700 bg-white border border-slate-200 rounded px-2.5 py-1.5 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendEmail();
+                        }}
+                        disabled={
+                          sendingEmail ||
+                          !candidateEmail ||
+                          !candidateEmail.includes("@")
+                        }
+                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors disabled:opacity-50 shrink-0"
+                      >
+                        {sendingEmail ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Send className="w-3 h-3" />
+                        )}
+                        Send
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      Assessment link sent to {candidateEmail}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
