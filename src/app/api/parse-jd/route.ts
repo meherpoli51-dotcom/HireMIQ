@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { extractText as extractPdfText } from "unpdf";
 
 // Extract text from uploaded file
 async function extractText(file: File): Promise<string> {
@@ -11,10 +12,9 @@ async function extractText(file: File): Promise<string> {
   }
 
   if (fileName.endsWith(".pdf")) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require("pdf-parse");
-    const data = await pdfParse(buffer);
-    return data.text || "";
+    const result = await extractPdfText(new Uint8Array(buffer));
+    const pages = result.text;
+    return Array.isArray(pages) ? pages.join("\n") : String(pages || "");
   }
 
   if (fileName.endsWith(".docx") || fileName.endsWith(".doc")) {
