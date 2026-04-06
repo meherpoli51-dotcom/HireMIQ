@@ -1,33 +1,36 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import type { Provider } from "next-auth/providers";
 
-// Build providers list — only add Google if credentials exist
-const providers: Provider[] = [];
+const providers = [];
 
+// Only add Google if fully configured
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  providers.push(
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    })
-  );
+  try {
+    providers.push(
+      Google({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      })
+    );
+  } catch {
+    console.warn("Google OAuth provider failed to initialize");
+  }
 }
 
-// Always include credentials provider
 providers.push(
   Credentials({
     name: "Email",
     credentials: {
       email: { label: "Email", type: "email" },
     },
-    async authorize(credentials) {
-      if (!credentials?.email) return null;
+    authorize(credentials) {
+      const email = credentials?.email as string;
+      if (!email) return null;
       return {
-        id: `user-${Date.now()}`,
-        email: credentials.email as string,
-        name: (credentials.email as string).split("@")[0],
+        id: email,
+        email,
+        name: email.split("@")[0],
       };
     },
   })
@@ -41,22 +44,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
     error: "/login",
   },
+  session: { strategy: "jwt" },
   callbacks: {
-    authorized({ auth: session, request }) {
-      const isLoggedIn = !!session?.user;
-      const path = request.nextUrl.pathname;
-      const isProtected =
-        path.startsWith("/workspace") || path.startsWith("/dashboard");
-      const isAssess = path.startsWith("/assess");
-
-      if (isAssess) return true;
-      if (isProtected && !isLoggedIn) return false;
-      return true;
-    },
     jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
+      if (user) token.id = user.id;
       return token;
     },
     session({ session, token }) {
@@ -65,8 +56,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
-  },
-  session: {
-    strategy: "jwt",
   },
 });
