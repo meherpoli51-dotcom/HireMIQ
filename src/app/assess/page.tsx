@@ -9,6 +9,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Shield,
+  BarChart3,
+  TrendingUp,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,10 +30,35 @@ interface AssessData {
   clientName: string;
   questions: AssessQuestion[];
   timeLimitMinutes: number;
-  status: string;
+  status?: string;
 }
 
-type PageState = "loading" | "ready" | "in_progress" | "submitting" | "submitted" | "error";
+interface EvaluationResult {
+  overallScore: number;
+  sectionScores: { section: string; score: number; feedback: string }[];
+  strengths: string[];
+  concerns: string[];
+  recommendation: string;
+  summary: string;
+}
+
+type PageState =
+  | "loading"
+  | "ready"
+  | "in_progress"
+  | "submitting"
+  | "submitted"
+  | "error";
+
+// Decode assessment data from URL parameter
+function decodeAssessData(encoded: string): AssessData | null {
+  try {
+    const json = decodeURIComponent(escape(atob(encoded)));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
 
 export default function AssessPage() {
   return (
@@ -48,37 +76,54 @@ export default function AssessPage() {
 
 function AssessPageContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const dataParam = searchParams.get("d");
+  const tokenParam = searchParams.get("token");
 
   const [pageState, setPageState] = useState<PageState>("loading");
   const [assessment, setAssessment] = useState<AssessData | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timeLeft, setTimeLeft] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
+  const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
 
-  // Fetch assessment data
+  // Load assessment data
   useEffect(() => {
-    if (!token) {
-      setErrorMsg("Invalid assessment link. No token provided.");
+    // Method 1: Self-contained data in URL (new approach)
+    if (dataParam) {
+      const data = decodeAssessData(dataParam);
+      if (data && data.questions?.length > 0) {
+        setAssessment(data);
+        setTimeLeft((data.timeLimitMinutes || 35) * 60);
+        setPageState("ready");
+        return;
+      }
+      setErrorMsg("Invalid assessment link. Data could not be decoded.");
       setPageState("error");
       return;
     }
 
-    fetch(`/api/assess?token=${encodeURIComponent(token)}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Assessment not found or expired");
-        return r.json();
-      })
-      .then((data) => {
-        setAssessment(data);
-        setTimeLeft(data.timeLimitMinutes * 60);
-        setPageState("ready");
-      })
-      .catch((err) => {
-        setErrorMsg(err.message);
-        setPageState("error");
-      });
-  }, [token]);
+    // Method 2: Legacy token-based fetch (backward compat)
+    if (tokenParam) {
+      fetch(`/api/assess?token=${encodeURIComponent(tokenParam)}`)
+        .then((r) => {
+          if (!r.ok) throw new Error("Assessment not found or expired");
+          return r.json();
+        })
+        .then((data) => {
+          setAssessment(data);
+          setTimeLeft((data.timeLimitMinutes || 35) * 60);
+          setPageState("ready");
+        })
+        .catch((err) => {
+          setErrorMsg(err.message);
+          setPageState("error");
+        });
+      return;
+    }
+
+    setErrorMsg("Invalid assessment link. No data provided.");
+    setPageState("error");
+  }, [dataParam, tokenParam]);
 
   // Timer
   useEffect(() => {
@@ -109,7 +154,7 @@ function AssessPageContent() {
   };
 
   const handleSubmit = useCallback(async () => {
-    if (!assessment || !token) return;
+    if (!assessment) return;
     setPageState("submitting");
 
     try {
@@ -122,7 +167,7 @@ function AssessPageContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token,
+          token: tokenParam || "self-contained",
           candidateName: assessment.candidateName,
           jobTitle: assessment.jobTitle,
           questions: assessment.questions,
@@ -131,12 +176,14 @@ function AssessPageContent() {
       });
 
       if (!response.ok) throw new Error("Submission failed");
+      const evalData = await response.json();
+      setEvaluation(evalData);
       setPageState("submitted");
     } catch {
       setErrorMsg("Failed to submit assessment. Please try again.");
       setPageState("in_progress");
     }
-  }, [assessment, token, answers]);
+  }, [assessment, tokenParam, answers]);
 
   // Auto-submit when time runs out
   useEffect(() => {
@@ -146,8 +193,9 @@ function AssessPageContent() {
   }, [timeLeft, pageState, handleSubmit]);
 
   const answeredCount = assessment
-    ? assessment.questions.filter((q) => (answers[q.id] || "").trim().length > 0)
-        .length
+    ? assessment.questions.filter(
+        (q) => (answers[q.id] || "").trim().length > 0
+      ).length
     : 0;
 
   // Error state
@@ -174,22 +222,168 @@ function AssessPageContent() {
     );
   }
 
-  // Submitted state
+  // Submitted state — show evaluation results
   if (pageState === "submitted") {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="max-w-md text-center">
-          <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-slate-900 mb-2">
-            Assessment Submitted
-          </h1>
-          <p className="text-sm text-slate-600 mb-2">
-            Thank you, {assessment?.candidateName}. Your responses have been
-            recorded and will be evaluated.
-          </p>
-          <p className="text-xs text-slate-400">
-            The recruiter will contact you with next steps.
-          </p>
+      <div className="min-h-screen bg-slate-50 py-10 px-4">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="text-center">
+            <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
+            <h1 className="text-xl font-bold text-slate-900 mb-2">
+              Assessment Submitted
+            </h1>
+            <p className="text-sm text-slate-600">
+              Thank you, {assessment?.candidateName}. Your responses have been
+              evaluated.
+            </p>
+          </div>
+
+          {/* Evaluation Results */}
+          {evaluation && (
+            <div className="space-y-4">
+              {/* Overall Score */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6 text-center">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  Overall Score
+                </p>
+                <div
+                  className={cn(
+                    "text-5xl font-bold mb-2",
+                    evaluation.overallScore >= 80
+                      ? "text-emerald-600"
+                      : evaluation.overallScore >= 60
+                        ? "text-amber-600"
+                        : "text-rose-600"
+                  )}
+                >
+                  {evaluation.overallScore}
+                  <span className="text-2xl text-slate-400">/100</span>
+                </div>
+                <span
+                  className={cn(
+                    "inline-block px-3 py-1 rounded-full text-xs font-semibold",
+                    evaluation.recommendation === "Strong"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : evaluation.recommendation === "Acceptable"
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-rose-50 text-rose-700"
+                  )}
+                >
+                  {evaluation.recommendation}
+                </span>
+              </div>
+
+              {/* Summary */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <h3 className="text-sm font-semibold text-slate-900 mb-2 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                  Assessment Summary
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {evaluation.summary}
+                </p>
+              </div>
+
+              {/* Section Scores */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-blue-600" />
+                  Section Breakdown
+                </h3>
+                <div className="space-y-4">
+                  {evaluation.sectionScores.map((s, i) => (
+                    <div key={i}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium text-slate-700 capitalize">
+                          {s.section.replace(/_/g, " ")}
+                        </span>
+                        <span
+                          className={cn(
+                            "text-xs font-bold",
+                            s.score >= 80
+                              ? "text-emerald-600"
+                              : s.score >= 60
+                                ? "text-amber-600"
+                                : "text-rose-600"
+                          )}
+                        >
+                          {s.score}/100
+                        </span>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-1.5">
+                        <div
+                          className={cn(
+                            "h-full rounded-full",
+                            s.score >= 80
+                              ? "bg-emerald-500"
+                              : s.score >= 60
+                                ? "bg-amber-500"
+                                : "bg-rose-500"
+                          )}
+                          style={{ width: `${s.score}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500">{s.feedback}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Strengths & Concerns */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-5">
+                  <h3 className="text-sm font-semibold text-emerald-700 mb-2 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Strengths
+                  </h3>
+                  <ul className="space-y-1.5">
+                    {evaluation.strengths.map((s, i) => (
+                      <li key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400 mt-0.5 shrink-0" />
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-xl p-5">
+                  <h3 className="text-sm font-semibold text-amber-700 mb-2 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Areas of Concern
+                  </h3>
+                  <ul className="space-y-1.5">
+                    {evaluation.concerns.map((c, i) => (
+                      <li key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
+                        <AlertTriangle className="w-3 h-3 text-amber-400 mt-0.5 shrink-0" />
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="text-center">
+                <p className="text-xs text-slate-400">
+                  Assessment for {assessment?.jobTitle} at{" "}
+                  {assessment?.clientName}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  The recruiter has been notified of your results.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Fallback if no evaluation */}
+          {!evaluation && (
+            <div className="bg-white border border-slate-200 rounded-xl p-6 text-center">
+              <p className="text-sm text-slate-600">
+                Your responses have been recorded. The recruiter will contact
+                you with next steps.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -251,7 +445,7 @@ function AssessPageContent() {
   }
 
   // In-progress state — questions
-  const timeWarning = timeLeft < 300; // last 5 minutes
+  const timeWarning = timeLeft < 300;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -336,8 +530,8 @@ function AssessPageContent() {
                 Ready to submit?
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
-                {answeredCount}/{assessment.questions.length} questions
-                answered. You cannot edit after submission.
+                {answeredCount}/{assessment.questions.length} questions answered.
+                You cannot edit after submission.
               </p>
             </div>
             <button

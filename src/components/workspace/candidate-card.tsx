@@ -152,6 +152,16 @@ function DimensionBar({
   );
 }
 
+// Encode assessment data into a URL-safe string
+function encodeAssessData(data: Record<string, unknown>): string {
+  try {
+    const json = JSON.stringify(data);
+    return btoa(unescape(encodeURIComponent(json)));
+  } catch {
+    return "";
+  }
+}
+
 interface CandidateCardProps {
   candidate: CandidateMatch;
   rank: number;
@@ -336,7 +346,27 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
                       });
                       if (!res.ok) throw new Error("Failed");
                       const data = await res.json();
-                      const link = `${window.location.origin}/assess?token=${data.token}`;
+
+                      // Encode assessment data directly in URL (self-contained, no DB needed)
+                      const assessPayload = {
+                        id: data.id,
+                        candidateName: data.candidateName,
+                        jobTitle: data.jobTitle,
+                        clientName: data.clientName,
+                        questions: (data.questions || []).map(
+                          (q: { id: string; section: string; sectionLabel: string; question: string; timeEstimate: string }) => ({
+                            id: q.id,
+                            section: q.section,
+                            sectionLabel: q.sectionLabel,
+                            question: q.question,
+                            timeEstimate: q.timeEstimate,
+                          })
+                        ),
+                        timeLimitMinutes: data.timeLimitMinutes || 35,
+                      };
+
+                      const encoded = encodeAssessData(assessPayload);
+                      const link = `${window.location.origin}/assess?d=${encodeURIComponent(encoded)}`;
                       setAssessLink(link);
                     } catch {
                       // handle silently
