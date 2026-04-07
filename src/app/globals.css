@@ -47,14 +47,28 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* HireMIQ brand colors */
+  /* HireMIQ brand colors — purple palette */
   --color-navy: #0f172a;
   --color-navy-light: #1e293b;
   --color-navy-dark: #020617;
-  --color-brand: #3b82f6;
-  --color-brand-dark: #2563eb;
-  --color-brand-light: #60a5fa;
-  --color-brand-muted: #dbeafe;
+
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #5B4FBF;
+  --color-brand-600: #4f3da8;
+  --color-brand-700: #433291;
+  --color-brand-800: #37277a;
+  --color-brand-900: #2b1d63;
+
+  /* Aliases for convenience */
+  --color-brand: #5B4FBF;
+  --color-brand-dark: #4f3da8;
+  --color-brand-light: #a78bfa;
+  --color-brand-muted: #ede9fe;
+
   --color-emerald: #10b981;
   --color-amber: #f59e0b;
   --color-rose: #f43f5e;
@@ -130,15 +144,74 @@
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
+  background: linear-gradient(135deg, #5B4FBF 0%, #a78bfa 50%, #c4b5fd 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 /* Subtle glow */
+.glow-brand {
+  box-shadow: 0 0 20px rgba(91, 79, 191, 0.15);
+}
 .glow-blue {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 20px rgba(91, 79, 191, 0.15);
+}
+
+/* Navbar glassmorphism */
+@keyframes navSlideDown {
+  from { opacity: 0; transform: translateY(-100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-nav-in {
+  animation: navSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Mobile menu reveal */
+@keyframes menuReveal {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 500px; }
+}
+.animate-menu-reveal {
+  animation: menuReveal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Pulse ring for CTA buttons */
+@keyframes pulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(91, 79, 191, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(91, 79, 191, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(91, 79, 191, 0); }
+}
+.animate-pulse-ring {
+  animation: pulseRing 2s ease-out infinite;
+}
+
+/* Shimmer effect for buttons */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.btn-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Footer link underline animation */
+.footer-link {
+  position: relative;
+}
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #a78bfa;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.footer-link:hover::after {
+  width: 100%;
 }
 
 /* Fade in animation */
@@ -169,3 +242,123 @@
 .stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
 .stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
 .stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+
+/* ── Landing page animations ── */
+
+/* Scroll-reveal: applied via IntersectionObserver */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Animated gradient mesh background for hero */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* Floating orbs / blobs */
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+.animate-float-slow {
+  animation: float 10s ease-in-out infinite;
+}
+.animate-float-delay {
+  animation: float 8s ease-in-out 2s infinite;
+}
+
+/* Dot grid pattern */
+.dot-pattern {
+  background-image: radial-gradient(circle, rgba(91, 79, 191, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.glass-card-dark {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Gradient border effect */
+.gradient-border {
+  position: relative;
+  background: white;
+  z-index: 0;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(135deg, #5B4FBF, #a78bfa, #c4b5fd, #5B4FBF);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Counter number animation */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-count {
+  animation: countUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Testimonial card glow */
+.testimonial-glow {
+  box-shadow: 0 0 0 1px rgba(91, 79, 191, 0.06),
+              0 4px 24px rgba(91, 79, 191, 0.06);
+  transition: box-shadow 0.3s ease;
+}
+.testimonial-glow:hover {
+  box-shadow: 0 0 0 1px rgba(91, 79, 191, 0.12),
+              0 8px 40px rgba(91, 79, 191, 0.12);
+}
+
+/* Spin slow for decorative elements */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+/* Scale in for module chips */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in {
+  animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

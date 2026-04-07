@@ -13,17 +13,19 @@ import {
   ChevronRight,
   Users,
   Building2,
+  Kanban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 
 const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "New Analysis", href: "/workspace", icon: FileSearch },
-  { label: "History", href: "/dashboard?tab=history", icon: History },
-  { label: "Clients", href: "/dashboard?tab=clients", icon: Building2 },
-  { label: "Candidates", href: "/dashboard?tab=candidates", icon: Users },
+  { label: "Dashboard",    href: "/dashboard", icon: LayoutDashboard },
+  { label: "New Analysis", href: "/workspace",  icon: FileSearch },
+  { label: "Pipeline",     href: "/pipeline",   icon: Kanban },
+  { label: "History",      href: "/dashboard?tab=history",    icon: History },
+  { label: "Clients",      href: "/dashboard?tab=clients",    icon: Building2 },
+  { label: "Candidates",   href: "/dashboard?tab=candidates", icon: Users },
 ];
 
 const bottomItems = [
@@ -74,7 +76,8 @@ export function AppSidebar() {
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href === "/workspace" && pathname.startsWith("/workspace"));
+            (item.href === "/workspace" && pathname.startsWith("/workspace")) ||
+            (item.href === "/pipeline"  && pathname.startsWith("/pipeline"));
           const Icon = item.icon;
           return (
             <Link

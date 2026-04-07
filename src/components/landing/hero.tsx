@@ -1,93 +1,119 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Users, Brain, ShieldCheck } from "lucide-react";
+import { ArrowRight, Sparkles, Users, Cpu } from "lucide-react";
 
 export function Hero() {
   return (
-    <section className="relative pt-36 pb-24 lg:pt-48 lg:pb-32 overflow-hidden">
-      {/* Subtle grid background */}
+    <section className="relative pt-32 pb-20 lg:pt-44 lg:pb-32 overflow-hidden">
+      {/* ── Animated gradient mesh background ── */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-blue-50/80 to-transparent rounded-full blur-3xl" />
+        {/* Base gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-50 via-white to-white" />
+
+        {/* Dot-grid overlay */}
+        <div className="absolute inset-0 dot-pattern [mask-image:radial-gradient(ellipse_80%_60%_at_50%_20%,#000_40%,transparent_100%)]" />
+
+        {/* Floating orbs */}
+        <div className="absolute top-16 left-[10%] w-72 h-72 rounded-full bg-brand-200/30 blur-3xl animate-float" />
+        <div className="absolute top-32 right-[8%] w-96 h-96 rounded-full bg-brand-300/20 blur-3xl animate-float-slow" />
+        <div className="absolute bottom-10 left-[30%] w-64 h-64 rounded-full bg-brand-100/40 blur-3xl animate-float-delay" />
+
+        {/* Decorative spinning ring */}
+        <div className="absolute top-1/3 right-[15%] w-48 h-48 rounded-full border border-brand-200/30 animate-spin-slow hidden lg:block" />
+        <div className="absolute bottom-1/4 left-[12%] w-32 h-32 rounded-full border border-brand-100/40 animate-spin-slow hidden lg:block" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-slate-900 text-white rounded-full px-4 py-2 mb-10 animate-fade-in">
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
+          <div
+            className="inline-flex items-center gap-2 bg-brand-500 text-white rounded-full px-4 py-2 mb-10 animate-fade-in shadow-lg shadow-brand-500/20"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-brand-200" />
             <span className="text-xs font-semibold tracking-wide">
-              AI-Powered Recruitment Intelligence
+              Recruitment Firm + AI Platform
             </span>
           </div>
 
           {/* Headline */}
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.05] mb-8 animate-fade-in">
-            Decode JDs.
-            <br />
-            <span className="bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-clip-text text-transparent">
-              Find Better Talent.
-            </span>
-          </h1>
-
-          {/* Subheadline */}
-          <p
-            className="text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto mb-12 leading-relaxed font-normal animate-fade-in"
+          <h1
+            className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.08] mb-8 animate-fade-in"
             style={{ animationDelay: "0.1s" }}
           >
-            Paste any job description. Get instant intelligence — skill mapping,
-            target companies, Boolean search strings, candidate scoring, and
-            AI-powered screening assessments. All in one platform.
+            Recruitment expertise.
+            <br />
+            <span className="bg-gradient-to-r from-brand-500 via-brand-400 to-brand-600 bg-clip-text text-transparent">
+              AI intelligence.
+            </span>
+            <br />
+            One partner.
+          </h1>
+
+          {/* Subtitle */}
+          <p
+            className="text-base sm:text-lg lg:text-xl text-slate-500 max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in"
+            style={{ animationDelay: "0.2s" }}
+          >
+            HireMIQ is a recruitment firm and AI platform — built by hiring
+            veterans with 15+ years inside India&rsquo;s top staffing agencies
+            and startups. We find your talent, or we give your team the tools to
+            do it faster than anyone.
           </p>
+
+          {/* Two-ways blurb */}
+          <div
+            className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-12 animate-fade-in"
+            style={{ animationDelay: "0.3s" }}
+          >
+            <div className="glass-card rounded-2xl p-5 text-left flex gap-4 items-start">
+              <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5 text-brand-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900 mb-1">
+                  Need to hire?
+                </p>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Our expert team handles it end-to-end.
+                </p>
+              </div>
+            </div>
+
+            <div className="glass-card rounded-2xl p-5 text-left flex gap-4 items-start">
+              <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+                <Cpu className="w-5 h-5 text-brand-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900 mb-1">
+                  Have a team?
+                </p>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Our AI platform makes them 10x faster.
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* CTAs */}
           <div
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 animate-fade-in"
-            style={{ animationDelay: "0.2s" }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in"
+            style={{ animationDelay: "0.4s" }}
           >
-            <Link href="/login">
-              <Button
-                size="lg"
-                className="bg-slate-900 hover:bg-slate-800 text-white h-13 px-8 text-base font-semibold rounded-xl shadow-xl shadow-slate-900/10"
-              >
-                Get Started Free
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+            <Link
+              href="/contact"
+              className="inline-flex items-center justify-center h-13 px-8 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl shadow-xl shadow-brand-500/20 transition-all duration-200 text-base gap-2 animate-pulse-ring"
+            >
+              Hire Through Us
+              <ArrowRight className="w-4 h-4" />
             </Link>
-            <a href="#how-it-works">
-              <Button
-                variant="outline"
-                size="lg"
-                className="h-13 px-8 text-base border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50"
-              >
-                See How It Works
-              </Button>
-            </a>
-          </div>
-
-          {/* Trust bar */}
-          <div
-            className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl mx-auto animate-fade-in"
-            style={{ animationDelay: "0.3s" }}
-          >
-            {[
-              { icon: Zap, value: "60s", label: "Analysis Time" },
-              { icon: Brain, value: "6+", label: "AI Modules" },
-              { icon: Users, value: "7D", label: "Match Scoring" },
-              { icon: ShieldCheck, value: "AI", label: "Assessments" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="flex items-center justify-center gap-1.5 mb-1.5">
-                  <stat.icon className="w-4 h-4 text-blue-600" />
-                  <span className="text-xl font-bold text-slate-900 tracking-tight">
-                    {stat.value}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400 font-medium">{stat.label}</p>
-              </div>
-            ))}
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center h-13 px-8 border-2 border-brand-200 text-brand-600 font-semibold rounded-xl hover:bg-brand-50 transition-all duration-200 text-base gap-2"
+            >
+              Try Platform Free
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </div>
