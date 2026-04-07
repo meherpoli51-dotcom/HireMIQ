@@ -16,36 +16,60 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HireMIQ — AI Recruitment Intelligence Platform",
+  title: {
+    default: "HireMIQ — AI Recruitment Platform for India | Free for 10 JDs",
+    template: "%s | HireMIQ",
+  },
   description:
-    "AI Recruitment Intelligence Platform for Recruiters and Staffing Agencies. Convert messy JDs into recruiter-ready sourcing and outreach workflows in minutes.",
+    "HireMIQ is India's AI recruitment platform. Analyze job descriptions in 60 seconds, generate Boolean search strings for Naukri & LinkedIn, score candidates, and automate outreach. Free for 10 JDs/month. Pro at ₹499/month.",
   metadataBase: new URL("https://hiremiq.com"),
   openGraph: {
-    title: "HireMIQ — AI Recruitment Intelligence Platform",
+    title: "HireMIQ — AI Recruitment Platform | Free for 10 JDs/month",
     description:
-      "AI-powered recruitment intelligence. Turn messy job descriptions into recruiter-ready sourcing workflows in minutes.",
+      "Analyze JDs in 60 seconds. Generate Naukri & LinkedIn Boolean strings. Score candidates with AI. Built by recruiters with 15+ years in India's staffing industry.",
     url: "https://hiremiq.com",
     siteName: "HireMIQ",
     type: "website",
+    locale: "en_IN",
   },
   twitter: {
-    card: "summary",
-    title: "HireMIQ — AI Recruitment Intelligence Platform",
+    card: "summary_large_image",
+    title: "HireMIQ — AI Recruitment Platform for India",
     description:
-      "AI Recruitment Intelligence Platform. 6 intelligence modules. Candidate scoring. Automated assessments.",
+      "8 AI recruitment modules. JD analysis in 60s. Boolean search for Naukri & LinkedIn. Candidate scoring. Free for 10 JDs/month.",
+    creator: "@hiremiq",
   },
   keywords: [
-    "AI recruitment",
-    "job description analysis",
-    "boolean search strings",
-    "recruiter tools",
-    "staffing agency software",
-    "talent sourcing",
-    "candidate outreach",
+    "AI recruitment platform India",
+    "Boolean search generator Naukri",
+    "LinkedIn Boolean search tool",
+    "job description analyzer",
+    "candidate screening AI",
+    "recruitment automation software",
+    "staffing agency software India",
+    "recruiter tools free",
+    "HR tech India",
+    "AI hiring platform",
+    "candidate matching software",
     "recruitment intelligence",
-    "HR tech",
-    "hiring platform",
+    "JD analysis tool",
+    "Boolean search strings free",
+    "recruitment software ₹499",
   ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "https://hiremiq.com",
+  },
 };
 
 export default function RootLayout({

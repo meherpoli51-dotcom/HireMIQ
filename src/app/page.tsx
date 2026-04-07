@@ -4,6 +4,7 @@ import { TrustBar } from "@/components/landing/trust-bar";
 import { Features } from "@/components/landing/features";
 import { WhoWeServe } from "@/components/landing/who-we-serve";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { Testimonials } from "@/components/landing/testimonials";
 import { Pricing } from "@/components/landing/pricing";
 import { Footer } from "@/components/landing/footer";
 
@@ -16,11 +17,11 @@ export default function LandingPage() {
       <Features />
       <WhoWeServe />
       <HowItWorks />
+      <Testimonials />
       <Pricing />
 
       {/* Final CTA */}
       <section className="py-24 lg:py-32 bg-slate-900 relative overflow-hidden">
-        {/* Decorative orbs */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-brand-400/10 rounded-full blur-3xl" />
 
@@ -29,23 +30,23 @@ export default function LandingPage() {
             Ready to hire smarter?
           </h2>
           <p className="text-lg text-slate-400 mb-10 max-w-xl mx-auto">
-            Join recruiters and staffing agencies across India who save hours
-            every week with AI-powered recruitment intelligence.
+            Join 50+ recruitment teams across India who save 7+ hours per week with HireMIQ.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
+              href="/login"
+              className="inline-flex items-center justify-center h-13 px-8 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors text-base shadow-lg shadow-brand-500/20 gap-2"
+            >
+              Start Free — 10 JDs/month
+            </a>
+            <a
               href="/contact"
-              className="inline-flex items-center justify-center h-13 px-8 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors text-base shadow-lg shadow-brand-500/20"
+              className="inline-flex items-center justify-center h-13 px-8 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white font-semibold rounded-xl transition-colors text-base"
             >
               Hire Through Us
             </a>
-            <a
-              href="/login"
-              className="inline-flex items-center justify-center h-13 px-8 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white font-semibold rounded-xl transition-colors text-base"
-            >
-              Try Platform Free
-            </a>
           </div>
+          <p className="text-xs text-slate-500 mt-4">No credit card required · Free forever plan</p>
         </div>
       </section>
 

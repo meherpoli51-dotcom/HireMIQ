@@ -8,8 +8,9 @@ import { useState, useEffect, useCallback } from "react";
 const NAV_LINKS = [
   { label: "Services", href: "/services" },
   { label: "Platform", href: "/platform" },
+  { label: "Pricing", href: "/pricing" },
   { label: "About Us", href: "/about" },
-  { label: "Blog", href: "/blog" },
+  { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
 ] as const;
 
