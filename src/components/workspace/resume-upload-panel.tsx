@@ -23,11 +23,13 @@ interface ResumeFile {
 interface ResumeUploadPanelProps {
   onMatch: (resumes: { fileName: string; text: string }[]) => void;
   isMatching: boolean;
+  hasAnalysis?: boolean;
 }
 
 export function ResumeUploadPanel({
   onMatch,
   isMatching,
+  hasAnalysis = true,
 }: ResumeUploadPanelProps) {
   const [files, setFiles] = useState<ResumeFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -224,12 +226,22 @@ export function ResumeUploadPanel({
         </div>
       )}
 
+      {/* No analysis warning */}
+      {!hasAnalysis && (
+        <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+          <p className="text-xs text-amber-700 font-medium">
+            Analyze a JD first — then upload resumes to score candidates against it.
+          </p>
+        </div>
+      )}
+
       {/* Match button */}
       {files.length > 0 && (
         <Button
           onClick={handleMatch}
-          disabled={isMatching || readyCount === 0 || parsingCount > 0}
-          className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm"
+          disabled={isMatching || readyCount === 0 || parsingCount > 0 || !hasAnalysis}
+          className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isMatching ? (
             <>
@@ -240,6 +252,11 @@ export function ResumeUploadPanel({
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Parsing {parsingCount} file{parsingCount !== 1 ? "s" : ""}...
+            </>
+          ) : !hasAnalysis ? (
+            <>
+              <AlertCircle className="w-4 h-4 mr-2" />
+              Analyze a JD first
             </>
           ) : (
             <>

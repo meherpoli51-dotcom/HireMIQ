@@ -41,25 +41,30 @@ export function OutputPanel({ result, isAnalyzing, error }: OutputPanelProps) {
   const [activeTab, setActiveTab] = useState("jd-iq");
   const [candidates, setCandidates] = useState<CandidateMatch[]>([]);
   const [isMatching, setIsMatching] = useState(false);
+  const [matchError, setMatchError] = useState<string | null>(null);
 
   const handleMatch = async (
     resumes: { fileName: string; text: string }[]
   ) => {
     if (!result) return;
     setIsMatching(true);
+    setMatchError(null);
+    // Auto-switch to match-iq tab so user sees progress
+    setActiveTab("match-iq");
     try {
       const response = await fetch("/api/match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ analysis: result, resumes }),
       });
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || "Matching failed");
       }
-      const data = await response.json();
       setCandidates((prev) => [...prev, ...data.candidates]);
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Candidate matching failed";
+      setMatchError(msg);
       console.error("Match error:", err);
     } finally {
       setIsMatching(false);
@@ -161,7 +166,18 @@ export function OutputPanel({ result, isAnalyzing, error }: OutputPanelProps) {
         {activeTab === "reach-iq" && <ReachIQTab data={result.reachIQ} />}
         {activeTab === "match-iq" && (
           <div className="space-y-5">
-            <ResumeUploadPanel onMatch={handleMatch} isMatching={isMatching} />
+            <ResumeUploadPanel onMatch={handleMatch} isMatching={isMatching} hasAnalysis={!!result} />
+            {matchError && (
+              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-red-500 text-xs font-bold">!</span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-red-700">Matching failed</p>
+                  <p className="text-xs text-red-600 mt-0.5">{matchError}</p>
+                </div>
+              </div>
+            )}
             {candidates.length > 0 && (
               <CandidateList candidates={candidates} analysis={result} />
             )}
