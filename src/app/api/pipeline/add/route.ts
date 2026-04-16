@@ -16,9 +16,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { candidate, analysis } = body as {
+    const { candidate, analysis, stage } = body as {
       candidate: CandidateMatch;
       analysis: AnalysisResult;
+      stage?: string;
     };
 
     if (!candidate || !analysis) {
@@ -27,23 +28,61 @@ export async function POST(request: NextRequest) {
 
     const db = createServerClient() as any;
 
-    // Save candidate to Supabase
+    // Verify analysis_id exists in DB before inserting
+    let analysisId = analysis.id;
+    const { data: existingAnalysis } = await db
+      .from("analyses")
+      .select("id")
+      .eq("id", analysisId)
+      .single();
+
+    if (!existingAnalysis) {
+      // Analysis not in DB — save it first
+      const { data: newAnalysis } = await db.from("analyses").insert({
+        user_id: userId,
+        job_title: analysis.jobTitle || "",
+        client_name: analysis.clientName || "",
+        location: "",
+        status: "completed",
+        result: analysis as unknown as Record<string, unknown>,
+      }).select("id").single();
+      if (newAnalysis?.id) {
+        analysisId = newAnalysis.id;
+      } else {
+        // Can't save without valid analysis_id — return error
+        return NextResponse.json({
+          success: false,
+          error: "Could not persist analysis",
+        }, { status: 500 });
+      }
+    }
+
+    // Save candidate to Supabase with pipeline stage
+    const pipelineStage = stage ||
+      (candidate.verdict === "Submit" ? "sourced" : candidate.verdict === "Screen" ? "screened" : "rejected");
+
     const { data, error } = await db.from("candidates").insert({
-      analysis_id: analysis.id,
+      analysis_id: analysisId,
       user_id: userId,
       resume_file_name: candidate.resumeFileName,
+      candidate_name: candidate.candidateName,
+      match_score: candidate.overallScore,
+      verdict: candidate.verdict,
+      pipeline_stage: pipelineStage,
       match_result: candidate as unknown as Record<string, unknown>,
     }).select("id").single();
 
     if (error) {
       console.error("Pipeline add error:", error);
-      // If analysis doesn't exist in DB yet (e.g. no Supabase), still return success
-      // so the UI pipeline works via Zustand
+      return NextResponse.json({
+        success: false,
+        error: "Failed to save candidate to pipeline",
+      }, { status: 500 });
     }
 
     return NextResponse.json({
       success: true,
-      candidateDbId: (data as any)?.id ?? null,
+      candidateDbId: data?.id ?? null,
     });
   } catch (err) {
     console.error("Pipeline add error:", err);

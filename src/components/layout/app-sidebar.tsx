@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Brain,
   LayoutDashboard,
@@ -35,6 +35,8 @@ const bottomItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab");
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
   const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "Recruiter";
@@ -74,10 +76,20 @@ export function AppSidebar() {
       {/* Nav */}
       <nav className="flex-1 py-4 px-3 space-y-1">
         {navItems.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href === "/workspace" && pathname.startsWith("/workspace")) ||
-            (item.href === "/pipeline"  && pathname.startsWith("/pipeline"));
+          // Smart active-state detection for query-param-based tabs
+          let isActive = false;
+          if (item.href.includes("?tab=")) {
+            const tabValue = new URL(item.href, "http://x").searchParams.get("tab");
+            isActive = pathname === "/dashboard" && currentTab === tabValue;
+          } else if (item.href === "/dashboard") {
+            isActive = pathname === "/dashboard" && !currentTab;
+          } else if (item.href === "/workspace") {
+            isActive = pathname.startsWith("/workspace");
+          } else if (item.href === "/pipeline") {
+            isActive = pathname.startsWith("/pipeline");
+          } else {
+            isActive = pathname === item.href;
+          }
           const Icon = item.icon;
           return (
             <Link

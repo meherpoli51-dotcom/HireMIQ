@@ -32,7 +32,17 @@ export function BoardHydrator() {
     // Guard against double-hydration (React StrictMode / hot reload)
     if (hydrated.current) return;
     hydrated.current = true;
-    hydrate([]); // TODO: replace with Supabase fetch when DB is ready
+
+    // Fetch persisted pipeline candidates from Supabase via API
+    fetch("/api/pipeline")
+      .then((r) => r.json())
+      .then((data) => {
+        hydrate(data.candidates ?? []);
+      })
+      .catch((err) => {
+        console.error("Pipeline fetch failed:", err);
+        hydrate([]); // Show empty state on error
+      });
   }, []); // empty deps — run exactly once on mount
 
   if (isLoading) {

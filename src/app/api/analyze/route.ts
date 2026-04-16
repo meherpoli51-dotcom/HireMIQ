@@ -56,7 +56,8 @@ export async function POST(request: NextRequest) {
 
     const result = await analyzeJD(input);
 
-    // Persist analysis to Supabase (non-blocking — never fails the request)
+    // Persist analysis to Supabase and use DB-generated ID
+    let dbAnalysisId: string | null = null;
     if (userId) {
       try {
         const db = createServerClient() as any;
@@ -72,7 +73,11 @@ export async function POST(request: NextRequest) {
           result: result as unknown as Record<string, unknown>,
         }).select("id").single();
         if (saveErr) console.warn("Analysis save error:", saveErr);
-        else console.log("Analysis saved:", savedAnalysis?.id);
+        else {
+          dbAnalysisId = savedAnalysis?.id;
+          // Override client-generated ID with the real DB ID
+          result.id = dbAnalysisId || result.id;
+        }
       } catch (dbErr) {
         console.warn("Analysis save skipped:", dbErr);
       }
@@ -85,7 +90,7 @@ export async function POST(request: NextRequest) {
         await logJDAnalysis(
           workspaceId,
           userId,
-          result.id,
+          dbAnalysisId || result.id,
           input.jobTitle,
           input.clientName
         );
