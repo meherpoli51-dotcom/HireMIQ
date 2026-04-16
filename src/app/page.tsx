@@ -37,7 +37,7 @@ export default function LandingPage() {
               href="/login"
               className="inline-flex items-center justify-center h-13 px-8 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors text-base shadow-lg shadow-brand-500/20 gap-2"
             >
-              Start Free — 10 JDs/month
+              Start Free — 5 JDs/month
             </a>
             <a
               href="/contact"

@@ -11,9 +11,9 @@ const plans = [
     period: "",
     badge: null,
     description:
-      "Get started with 10 free JD analyses. No credit card required.",
+      "Get started with 5 free JD analyses. No credit card required.",
     features: [
-      "10 JD analyses per month",
+      "5 JD analyses per month",
       "All 8 AI intelligence modules",
       "Boolean search string generation",
       "Candidate match scoring",
@@ -88,7 +88,7 @@ export function Pricing() {
             Start free. Scale when ready.
           </h2>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-            10 free JD analyses every month. Upgrade to Pro for unlimited power
+            5 free JD analyses every month. Upgrade to Pro for unlimited power
             at just ₹499/month — less than your daily coffee.
           </p>
         </div>

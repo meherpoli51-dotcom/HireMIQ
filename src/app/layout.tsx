@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -17,14 +18,14 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "HireMIQ — AI Recruitment Platform for India | Free for 10 JDs",
+    default: "HireMIQ — AI Recruitment Platform for India | Free for 5 JDs",
     template: "%s | HireMIQ",
   },
   description:
-    "HireMIQ is India's AI recruitment platform. Analyze job descriptions in 60 seconds, generate Boolean search strings for Naukri & LinkedIn, score candidates, and automate outreach. Free for 10 JDs/month. Pro at ₹499/month.",
+    "HireMIQ is India's AI recruitment platform. Analyze job descriptions in 60 seconds, generate Boolean search strings for Naukri & LinkedIn, score candidates, and automate outreach. Free for 5 JDs/month. Pro at ₹499/month.",
   metadataBase: new URL("https://hiremiq.com"),
   openGraph: {
-    title: "HireMIQ — AI Recruitment Platform | Free for 10 JDs/month",
+    title: "HireMIQ — AI Recruitment Platform | Free for 5 JDs/month",
     description:
       "Analyze JDs in 60 seconds. Generate Naukri & LinkedIn Boolean strings. Score candidates with AI. Built by recruiters with 15+ years in India's staffing industry.",
     url: "https://hiremiq.com",
@@ -36,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "HireMIQ — AI Recruitment Platform for India",
     description:
-      "8 AI recruitment modules. JD analysis in 60s. Boolean search for Naukri & LinkedIn. Candidate scoring. Free for 10 JDs/month.",
+      "8 AI recruitment modules. JD analysis in 60s. Boolean search for Naukri & LinkedIn. Candidate scoring. Free for 5 JDs/month.",
     creator: "@hiremiq",
   },
   keywords: [
@@ -84,6 +85,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <Providers>{children}</Providers>
+        {/* Razorpay checkout SDK — loaded lazily, only when needed */}
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

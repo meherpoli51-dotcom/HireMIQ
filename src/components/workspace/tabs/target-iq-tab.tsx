@@ -63,7 +63,7 @@ export function TargetIQTab({ data }: { data: TargetIQOutput }) {
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
         </div>
-        <CompanyList companies={data.idealCompanies} color="blue" />
+        <CompanyList companies={data.idealCompanies ?? []} color="blue" />
       </div>
 
       {/* Similar Companies */}
@@ -75,7 +75,7 @@ export function TargetIQTab({ data }: { data: TargetIQOutput }) {
             Strong Fit
           </Badge>
         </h3>
-        <CompanyList companies={data.similarCompanies} color="emerald" />
+        <CompanyList companies={data.similarCompanies ?? []} color="emerald" />
       </div>
 
       {/* Adjacent Companies */}
@@ -87,7 +87,7 @@ export function TargetIQTab({ data }: { data: TargetIQOutput }) {
             Explore
           </Badge>
         </h3>
-        <CompanyList companies={data.adjacentCompanies} color="amber" />
+        <CompanyList companies={data.adjacentCompanies ?? []} color="amber" />
       </div>
 
       {/* Avoid Companies */}
@@ -100,7 +100,7 @@ export function TargetIQTab({ data }: { data: TargetIQOutput }) {
           </Badge>
         </h3>
         <ul className="space-y-2">
-          {data.avoidCompanies.map((company, i) => (
+          {(data.avoidCompanies ?? []).map((company, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-rose-800/80">
               <span className="text-rose-400 mt-0.5 shrink-0">&#10005;</span>
               {company}

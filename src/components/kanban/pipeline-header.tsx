@@ -111,9 +111,9 @@ function StatsStrip() {
 /* ------------------------------------------------------------------ */
 
 export function PipelineHeader() {
-  const { filters, setFilters, candidates } = useKanbanStore();
-
-  const totalCandidates = Object.keys(candidates).length;
+  const filters = useKanbanStore((s) => s.filters);
+  const setFilters = useKanbanStore((s) => s.setFilters);
+  const totalCandidates = useKanbanStore((s) => Object.keys(s.candidates).length);
   const hasActiveFilters =
     filters.search !== "" ||
     filters.source !== "all" ||

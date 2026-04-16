@@ -57,7 +57,7 @@ export function JDIQTab({ data }: { data: JDIQOutput }) {
           Key Responsibilities
         </h3>
         <ul className="space-y-2">
-          {data.responsibilities.map((item, i) => (
+          {(data.responsibilities ?? []).map((item, i) => (
             <li key={i} className="flex items-start gap-2.5 text-sm text-slate-600">
               <span className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                 {i + 1}
@@ -74,11 +74,11 @@ export function JDIQTab({ data }: { data: JDIQOutput }) {
           <AlertTriangle className="w-4 h-4 text-amber-500" />
           Missing Information
           <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">
-            {data.missingInformation.length} gaps
+            {(data.missingInformation ?? []).length} gaps
           </Badge>
         </h3>
         <ul className="space-y-2">
-          {data.missingInformation.map((item, i) => (
+          {(data.missingInformation ?? []).map((item, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-amber-800">
               <span className="text-amber-500 mt-1">&#8226;</span>
               {item}

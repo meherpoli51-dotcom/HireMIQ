@@ -3,6 +3,13 @@ import { Resend } from "resend";
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check — prevent open email relay
+    const { auth } = await import("@/lib/auth");
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { candidateEmail, candidateName, jobTitle, clientName, assessLink } =
       body as {

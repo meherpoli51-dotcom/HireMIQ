@@ -48,7 +48,7 @@ export function ReachIQTab({ data }: { data: ReachIQOutput }) {
         </p>
       </div>
 
-      {data.messages.map((msg, i) => {
+      {(data.messages ?? []).map((msg, i) => {
         const typeKey = getTypeKey(msg.type);
         const colors = typeColors[typeKey];
         const Icon = typeIcons[typeKey] || Mail;

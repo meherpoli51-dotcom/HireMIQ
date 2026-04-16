@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import crypto from "crypto";
 import type { JDInput, AnalysisResult } from "../types";
 import {
   SYSTEM_PROMPT,
@@ -36,12 +37,20 @@ async function callClaude(modulePrompt: string, context: string): Promise<string
 }
 
 function parseJSON(raw: string): Record<string, unknown> {
+  if (!raw || !raw.trim()) {
+    throw new Error("Empty response from AI model");
+  }
   // Strip markdown code fences if present
   let cleaned = raw.trim();
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
   }
-  return JSON.parse(cleaned);
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    console.error("Failed to parse AI response:", cleaned.substring(0, 200));
+    throw new Error("AI returned invalid JSON. Please try again.");
+  }
 }
 
 export async function analyzeJD(input: JDInput): Promise<AnalysisResult> {
@@ -66,7 +75,7 @@ export async function analyzeJD(input: JDInput): Promise<AnalysisResult> {
   const reachIQ = parseJSON(reachIQRaw);
 
   return {
-    id: `analysis-${Date.now()}`,
+    id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
     jobTitle: input.jobTitle || (jdIQ.roleTitle as string) || "Untitled Role",
     clientName: input.clientName || "Unknown Client",

@@ -44,7 +44,7 @@ export function SkillIQTab({ data }: { data: SkillIQOutput }) {
           </button>
         </div>
         <div className="flex flex-wrap gap-2">
-          {data.mandatorySkills.map((skill) => (
+          {(data.mandatorySkills ?? []).map((skill) => (
             <SkillBadge key={skill} skill={skill} variant="mandatory" />
           ))}
         </div>
@@ -60,7 +60,7 @@ export function SkillIQTab({ data }: { data: SkillIQOutput }) {
           </Badge>
         </h3>
         <div className="flex flex-wrap gap-2">
-          {data.secondarySkills.map((skill) => (
+          {(data.secondarySkills ?? []).map((skill) => (
             <SkillBadge key={skill} skill={skill} variant="secondary" />
           ))}
         </div>
@@ -73,7 +73,7 @@ export function SkillIQTab({ data }: { data: SkillIQOutput }) {
           Nice-to-Have Skills
         </h3>
         <div className="flex flex-wrap gap-2">
-          {data.niceToHaveSkills.map((skill) => (
+          {(data.niceToHaveSkills ?? []).map((skill) => (
             <SkillBadge key={skill} skill={skill} variant="nice" />
           ))}
         </div>
@@ -86,7 +86,7 @@ export function SkillIQTab({ data }: { data: SkillIQOutput }) {
           Tools & Platforms
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {data.toolsPlatforms.map((tool) => (
+          {(data.toolsPlatforms ?? []).map((tool) => (
             <div
               key={tool}
               className="flex items-center gap-2 bg-amber-50/50 rounded-md px-3 py-2 border border-amber-100 text-sm text-amber-800"
@@ -106,7 +106,7 @@ export function SkillIQTab({ data }: { data: SkillIQOutput }) {
             Search Keywords
           </h3>
           <div className="flex flex-wrap gap-1.5">
-            {data.searchKeywords.map((kw) => (
+            {(data.searchKeywords ?? []).map((kw) => (
               <span
                 key={kw}
                 className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600"
@@ -123,7 +123,7 @@ export function SkillIQTab({ data }: { data: SkillIQOutput }) {
             Alternative Job Titles
           </h3>
           <ul className="space-y-1.5">
-            {data.alternativeJobTitles.map((title) => (
+            {(data.alternativeJobTitles ?? []).map((title) => (
               <li
                 key={title}
                 className="text-sm text-slate-600 flex items-center gap-2"

@@ -56,7 +56,7 @@ export function ClientIQTab({ data }: { data: ClientIQOutput }) {
           </button>
         </div>
         <div className="grid sm:grid-cols-2 gap-2">
-          {data.candidateSellingPoints.map((point, i) => (
+          {(data.candidateSellingPoints ?? []).map((point, i) => (
             <div
               key={i}
               className="flex items-start gap-2 bg-emerald-50/50 rounded-lg px-3 py-2 border border-emerald-100"
@@ -102,7 +102,7 @@ export function ClientIQTab({ data }: { data: ClientIQOutput }) {
           </Badge>
         </h3>
         <ul className="space-y-2">
-          {data.candidateObjectionRisks.map((risk, i) => (
+          {(data.candidateObjectionRisks ?? []).map((risk, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-rose-800/80">
               <span className="text-rose-400 mt-1">&#9888;</span>
               {risk}

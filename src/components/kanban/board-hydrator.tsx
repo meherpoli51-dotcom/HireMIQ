@@ -3,285 +3,37 @@
 /**
  * HireMIQ — Board Hydrator
  * ==========================
- * Client component that seeds the Zustand store with mock data on
- * first mount, then renders the full pipeline board.
+ * Client component that hydrates the Zustand store on first mount,
+ * then renders the full pipeline board.
  *
- * Swap `generateMockCandidates()` for a Supabase fetch (server action)
+ * Replace `hydrate([])` with a Supabase fetch (server action)
  * when the DB is ready — no other file changes needed.
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import Link from "next/link";
 import { useKanbanStore } from "@/store/use-kanban-store";
-import { type PipelineCandidate, type PipelineStage } from "@/types/kanban";
 import { BoardContainer } from "./board-container";
 import { PipelineHeader } from "./pipeline-header";
-
-/* ------------------------------------------------------------------ */
-/*  Mock seed data                                                     */
-/* ------------------------------------------------------------------ */
-
-function generateMockCandidates(): PipelineCandidate[] {
-  const now = new Date().toISOString();
-
-  const seed: Omit<PipelineCandidate, "createdAt" | "updatedAt" | "movedAt">[] = [
-    // ── Sourced ──
-    {
-      id: "c1",
-      name: "Priya Sharma",
-      email: "priya.sharma@gmail.com",
-      phone: "+91 98765 43210",
-      matchScore: 87,
-      matchBreakdown: { skills: 90, culture: 85, seniority: 86 },
-      source: "linkedin",
-      priority: "high",
-      stage: "sourced",
-      order: 0,
-      jobId: "j1",
-      jobTitle: "Senior Frontend Engineer",
-      clientName: "Razorpay",
-      skillBreakdown: [
-        { skill: "React", score: 95, verdict: "strong" },
-        { skill: "TypeScript", score: 88, verdict: "strong" },
-        { skill: "System Design", score: 72, verdict: "strong" },
-      ],
-      booleanStrings: [
-        '("React" OR "Next.js") AND ("TypeScript") AND ("frontend" OR "UI engineer") site:linkedin.com',
-      ],
-    },
-    {
-      id: "c2",
-      name: "Arjun Mehta",
-      email: "arjun.mehta@outlook.com",
-      matchScore: 63,
-      matchBreakdown: { skills: 65, culture: 60, seniority: 64 },
-      source: "naukri",
-      priority: "medium",
-      stage: "sourced",
-      order: 1,
-      jobId: "j1",
-      jobTitle: "Senior Frontend Engineer",
-      clientName: "Razorpay",
-      skillBreakdown: [
-        { skill: "React", score: 70, verdict: "strong" },
-        { skill: "TypeScript", score: 55, verdict: "moderate" },
-        { skill: "System Design", score: 48, verdict: "moderate" },
-      ],
-    },
-    {
-      id: "c3",
-      name: "Neha Kulkarni",
-      email: "neha.k@yahoo.com",
-      matchScore: 41,
-      matchBreakdown: { skills: 40, culture: 45, seniority: 38 },
-      source: "indeed",
-      priority: "low",
-      stage: "sourced",
-      order: 2,
-      jobId: "j2",
-      jobTitle: "Product Manager",
-      clientName: "Swiggy",
-    },
-
-    // ── Screened ──
-    {
-      id: "c4",
-      name: "Rahul Verma",
-      email: "rahul.verma@proton.me",
-      phone: "+91 87654 32109",
-      matchScore: 79,
-      matchBreakdown: { skills: 82, culture: 78, seniority: 77 },
-      source: "referral",
-      priority: "high",
-      stage: "screened",
-      order: 0,
-      jobId: "j2",
-      jobTitle: "Product Manager",
-      clientName: "Swiggy",
-      skillBreakdown: [
-        { skill: "Product Strategy", score: 85, verdict: "strong" },
-        { skill: "Data Analysis", score: 78, verdict: "strong" },
-        { skill: "Stakeholder Mgmt", score: 72, verdict: "strong" },
-      ],
-    },
-    {
-      id: "c5",
-      name: "Sneha Iyer",
-      email: "sneha.iyer@gmail.com",
-      matchScore: 55,
-      matchBreakdown: { skills: 52, culture: 60, seniority: 53 },
-      source: "linkedin",
-      priority: "medium",
-      stage: "screened",
-      order: 1,
-      jobId: "j3",
-      jobTitle: "Backend Engineer (Go)",
-      clientName: "Zepto",
-    },
-
-    // ── Assessment Sent ──
-    {
-      id: "c6",
-      name: "Karan Joshi",
-      email: "karan.joshi@gmail.com",
-      phone: "+91 99887 76655",
-      matchScore: 91,
-      matchBreakdown: { skills: 93, culture: 90, seniority: 90 },
-      source: "internal",
-      priority: "high",
-      stage: "assessment_sent",
-      order: 0,
-      jobId: "j3",
-      jobTitle: "Backend Engineer (Go)",
-      clientName: "Zepto",
-      skillBreakdown: [
-        { skill: "Golang", score: 95, verdict: "strong" },
-        { skill: "Microservices", score: 90, verdict: "strong" },
-        { skill: "Kubernetes", score: 88, verdict: "strong" },
-      ],
-      booleanStrings: [
-        '("Golang" OR "Go lang") AND ("microservices" OR "gRPC") AND ("Kubernetes") site:linkedin.com',
-      ],
-    },
-    {
-      id: "c7",
-      name: "Divya Nair",
-      email: "divya.nair@hotmail.com",
-      matchScore: 68,
-      matchBreakdown: { skills: 70, culture: 65, seniority: 69 },
-      source: "naukri",
-      priority: "medium",
-      stage: "assessment_sent",
-      order: 1,
-      jobId: "j4",
-      jobTitle: "Data Scientist",
-      clientName: "PhonePe",
-    },
-
-    // ── Interview Scheduled ──
-    {
-      id: "c8",
-      name: "Vikram Malhotra",
-      email: "vikram.m@gmail.com",
-      phone: "+91 91234 56789",
-      matchScore: 84,
-      matchBreakdown: { skills: 86, culture: 82, seniority: 84 },
-      source: "linkedin",
-      priority: "high",
-      stage: "interview_scheduled",
-      order: 0,
-      jobId: "j4",
-      jobTitle: "Data Scientist",
-      clientName: "PhonePe",
-      skillBreakdown: [
-        { skill: "Python / ML", score: 90, verdict: "strong" },
-        { skill: "SQL & Analytics", score: 85, verdict: "strong" },
-        { skill: "Deep Learning", score: 76, verdict: "strong" },
-      ],
-    },
-    {
-      id: "c9",
-      name: "Anjali Singh",
-      email: "anjali.singh@gmail.com",
-      matchScore: 72,
-      matchBreakdown: { skills: 75, culture: 70, seniority: 71 },
-      source: "referral",
-      priority: "medium",
-      stage: "interview_scheduled",
-      order: 1,
-      jobId: "j1",
-      jobTitle: "Senior Frontend Engineer",
-      clientName: "Razorpay",
-    },
-
-    // ── Offered ──
-    {
-      id: "c10",
-      name: "Rohan Gupta",
-      email: "rohan.gupta@proton.me",
-      phone: "+91 98001 23456",
-      matchScore: 93,
-      matchBreakdown: { skills: 95, culture: 91, seniority: 93 },
-      source: "linkedin",
-      priority: "high",
-      stage: "offered",
-      order: 0,
-      jobId: "j5",
-      jobTitle: "Engineering Manager",
-      clientName: "CRED",
-      skillBreakdown: [
-        { skill: "Technical Leadership", score: 96, verdict: "strong" },
-        { skill: "System Design", score: 92, verdict: "strong" },
-        { skill: "People Management", score: 91, verdict: "strong" },
-      ],
-    },
-
-    // ── Joined ──
-    {
-      id: "c11",
-      name: "Meera Pillai",
-      email: "meera.pillai@gmail.com",
-      matchScore: 88,
-      matchBreakdown: { skills: 90, culture: 87, seniority: 87 },
-      source: "referral",
-      priority: "high",
-      stage: "joined",
-      order: 0,
-      jobId: "j5",
-      jobTitle: "Engineering Manager",
-      clientName: "CRED",
-    },
-
-    // ── Rejected ──
-    {
-      id: "c12",
-      name: "Aditya Rao",
-      email: "aditya.rao@gmail.com",
-      matchScore: 32,
-      matchBreakdown: { skills: 30, culture: 35, seniority: 31 },
-      source: "indeed",
-      priority: "low",
-      stage: "rejected",
-      order: 0,
-      jobId: "j2",
-      jobTitle: "Product Manager",
-      clientName: "Swiggy",
-    },
-    {
-      id: "c13",
-      name: "Pooja Desai",
-      email: "pooja.desai@outlook.com",
-      matchScore: 28,
-      matchBreakdown: { skills: 25, culture: 30, seniority: 29 },
-      source: "naukri",
-      priority: "low",
-      stage: "rejected",
-      order: 1,
-      jobId: "j3",
-      jobTitle: "Backend Engineer (Go)",
-      clientName: "Zepto",
-    },
-  ];
-
-  return seed.map((c) => ({
-    ...c,
-    createdAt: now,
-    updatedAt: now,
-    movedAt: now,
-  }));
-}
+import { FileSearch, Kanban, Users } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Board Hydrator Component                                           */
 /* ------------------------------------------------------------------ */
 
 export function BoardHydrator() {
-  const hydrate = useKanbanStore((s) => s.hydrate);
-  const isLoading = useKanbanStore((s) => s.isLoading);
+  const hydrate      = useKanbanStore((s) => s.hydrate);
+  const isLoading    = useKanbanStore((s) => s.isLoading);
+  const candidates   = useKanbanStore((s) => s.candidates);
+  const hydrated     = useRef(false);
+  const isEmpty      = !isLoading && Object.keys(candidates).length === 0;
 
   useEffect(() => {
-    // Hydrate with mock data (replace with Supabase fetch later)
-    hydrate(generateMockCandidates());
-  }, [hydrate]);
+    // Guard against double-hydration (React StrictMode / hot reload)
+    if (hydrated.current) return;
+    hydrated.current = true;
+    hydrate([]); // TODO: replace with Supabase fetch when DB is ready
+  }, []); // empty deps — run exactly once on mount
 
   if (isLoading) {
     return (
@@ -291,6 +43,42 @@ export function BoardHydrator() {
           <p className="text-sm text-slate-400 font-medium">
             Loading pipeline…
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <PipelineHeader />
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center max-w-md">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center mx-auto mb-5">
+              <Kanban className="w-10 h-10 text-indigo-400" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Pipeline is empty</h2>
+            <p className="text-sm text-slate-500 leading-relaxed mb-6">
+              Candidates appear here after you run a JD analysis and click
+              <strong className="text-slate-700"> Add to Pipeline</strong> on a Match IQ result.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/workspace"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+              >
+                <FileSearch className="w-4 h-4" />
+                Analyze a JD
+              </Link>
+              <a
+                href="/help"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-sm font-semibold rounded-xl transition-colors"
+              >
+                <Users className="w-4 h-4" />
+                How it works
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     );

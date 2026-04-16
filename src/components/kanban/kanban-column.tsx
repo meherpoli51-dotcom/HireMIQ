@@ -9,6 +9,7 @@
  * selector ensures it only subscribes to its own ID array.
  */
 
+import { useMemo, memo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -56,14 +57,32 @@ interface KanbanColumnProps {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function KanbanColumn({ stage, isOver }: KanbanColumnProps) {
+function KanbanColumnInner({ stage, isOver }: KanbanColumnProps) {
   const meta = STAGE_META[stage];
   const Icon = ICON_MAP[meta.icon] ?? Search;
 
-  /* Subscribe only to this column's filtered ID list */
-  const candidateIds = useKanbanStore((s) => s.getFilteredColumn(stage));
+  /* Stable direct store reads — no selector wrapping needed for object refs */
+  const columnIds  = useKanbanStore((s) => s.columns[stage]) ?? [];
   const candidates = useKanbanStore((s) => s.candidates);
-  const count = useKanbanStore((s) => s.columns[stage].length); // unfiltered count
+  const filters    = useKanbanStore((s) => s.filters);
+  const count      = columnIds.length;
+
+  /* Derive filtered IDs — only recomputes when deps change */
+  const candidateIds = useMemo(() => {
+    if (!columnIds.length) return [];
+    return columnIds.filter((id) => {
+      const c = candidates[id];
+      if (!c) return false;
+      if (filters.search) {
+        const q = filters.search.toLowerCase();
+        if (!`${c.name} ${c.jobTitle} ${c.clientName} ${c.email}`.toLowerCase().includes(q)) return false;
+      }
+      if (filters.source   !== "all" && c.source   !== filters.source)   return false;
+      if (filters.priority !== "all" && c.priority !== filters.priority) return false;
+      if (filters.jobId    !== "all" && c.jobId    !== filters.jobId)    return false;
+      return true;
+    });
+  }, [columnIds, candidates, filters]);
 
   /* ── Make this element a drop target ── */
   const { setNodeRef } = useDroppable({ id: stage });
@@ -149,3 +168,5 @@ export function KanbanColumn({ stage, isOver }: KanbanColumnProps) {
     </div>
   );
 }
+
+export const KanbanColumn = memo(KanbanColumnInner);

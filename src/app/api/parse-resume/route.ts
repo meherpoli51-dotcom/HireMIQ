@@ -4,28 +4,52 @@ import { extractText as extractPdfText } from "unpdf";
 async function extractText(file: File): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer());
   const fileName = file.name.toLowerCase();
+  const mimeType = file.type.toLowerCase();
 
-  if (fileName.endsWith(".txt")) {
+  if (fileName.endsWith(".txt") || mimeType === "text/plain") {
     return buffer.toString("utf-8");
   }
 
-  if (fileName.endsWith(".pdf")) {
-    const result = await extractPdfText(new Uint8Array(buffer));
-    const pages = result.text;
-    return Array.isArray(pages) ? pages.join("\n") : String(pages || "");
+  if (fileName.endsWith(".pdf") || mimeType === "application/pdf") {
+    try {
+      const result = await extractPdfText(new Uint8Array(buffer));
+      const pages = result.text;
+      return Array.isArray(pages) ? pages.join("\n") : String(pages || "");
+    } catch {
+      throw new Error("Could not read PDF. Try a different file.");
+    }
   }
 
-  if (fileName.endsWith(".docx") || fileName.endsWith(".doc")) {
-    const mammoth = await import("mammoth");
-    const result = await mammoth.extractRawText({ buffer });
-    return result.value || "";
+  if (
+    fileName.endsWith(".docx") ||
+    fileName.endsWith(".doc") ||
+    mimeType.includes("word") ||
+    mimeType.includes("officedocument")
+  ) {
+    try {
+      const mammoth = await import("mammoth");
+      const result = await mammoth.extractRawText({ buffer });
+      if (result.value?.trim()) return result.value;
+    } catch { /* fall through */ }
   }
 
-  throw new Error("Unsupported format. Upload PDF, DOCX, or TXT.");
+  // Last resort — raw text extraction
+  const rawText = buffer.toString("utf-8");
+  const printable = rawText.replace(/[^\x20-\x7E\n\r\t]/g, " ").replace(/\s+/g, " ").trim();
+  if (printable.length > 100) return printable;
+
+  throw new Error("Could not read this file. Please upload PDF, DOCX, or TXT.");
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check — prevent unauthenticated file upload
+    const { auth } = await import("@/lib/auth");
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 

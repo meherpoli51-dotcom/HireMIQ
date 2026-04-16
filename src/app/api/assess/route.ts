@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAssessment } from "@/lib/ai/assess";
-import { mockAssessment, mockAssessmentQuestions } from "@/lib/mock-data";
+import { auth } from "@/lib/auth";
 import type { AnalysisResult, CandidateMatch, Assessment } from "@/lib/types";
 import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check — prevent unauthenticated API cost abuse
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { analysis, candidate } = body as {
       analysis: AnalysisResult;
@@ -19,30 +25,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey || apiKey === "your-api-key-here") {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      return NextResponse.json({
-        ...mockAssessment,
-        id: `assess-${Date.now()}`,
-        candidateId: candidate.id,
-        candidateName: candidate.candidateName,
-        jobTitle: analysis.jobTitle,
-        clientName: analysis.clientName,
-        token: crypto.randomBytes(24).toString("hex"),
-        expiresAt: new Date(
-          Date.now() + 7 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        _mock: true,
-      });
-    }
-
-    // Real assessment generation
     const questions = await generateAssessment(analysis, candidate);
     const token = crypto.randomBytes(24).toString("hex");
 
     const assessment: Assessment = {
-      id: `assess-${Date.now()}`,
+      id: crypto.randomUUID(),
       candidateId: candidate.id,
       candidateName: candidate.candidateName,
       jobTitle: analysis.jobTitle,
@@ -77,23 +64,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // In production, this would query a database
-  // For now, return mock data for any token
-  const assessment = {
-    id: mockAssessment.id,
-    candidateName: mockAssessment.candidateName,
-    jobTitle: mockAssessment.jobTitle,
-    clientName: mockAssessment.clientName,
-    questions: mockAssessmentQuestions.map((q) => ({
-      id: q.id,
-      section: q.section,
-      sectionLabel: q.sectionLabel,
-      question: q.question,
-      timeEstimate: q.timeEstimate,
-    })),
-    timeLimitMinutes: mockAssessment.timeLimitMinutes,
-    status: mockAssessment.status,
-  };
-
-  return NextResponse.json(assessment);
+  // TODO: query database by token when Supabase is wired up
+  return NextResponse.json(
+    { error: "Assessment retrieval requires database setup" },
+    { status: 501 }
+  );
 }

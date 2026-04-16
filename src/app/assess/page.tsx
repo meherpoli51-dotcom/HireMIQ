@@ -353,7 +353,8 @@ function AssessPageContent() {
 
       if (!response.ok) throw new Error("Submission failed");
       const evalData = await response.json();
-      setEvaluation(evalData);
+      // API returns { evaluation: {...} } — unwrap it
+      setEvaluation(evalData.evaluation || evalData);
       setPageState("submitted");
     } catch {
       setErrorMsg("Failed to submit assessment. Please try again.");

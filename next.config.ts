@@ -6,6 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dir = dirname(__filename);
 
 const nextConfig: NextConfig = {
+  reactStrictMode: false,
   turbopack: {
     root: __dir,
   },

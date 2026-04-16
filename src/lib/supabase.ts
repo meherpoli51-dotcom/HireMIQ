@@ -36,3 +36,20 @@ export function createServerClient() {
   }
   return _serverClient;
 }
+
+// Lazy export for convenience in server-side code
+// Don't call createServerClient() at module level — env vars may not be loaded yet
+let _supabaseExport: SupabaseClient<Database> | null = null;
+export function getServerSupabase() {
+  if (!_supabaseExport) {
+    _supabaseExport = createServerClient();
+  }
+  return _supabaseExport;
+}
+
+// Backward-compatible getter (acts like a constant but initializes lazily)
+export const supabase = new Proxy({} as SupabaseClient<Database>, {
+  get(_target, prop) {
+    return (getServerSupabase() as any)[prop];
+  },
+});

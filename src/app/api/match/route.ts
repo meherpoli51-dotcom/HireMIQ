@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { matchCandidate } from "@/lib/ai/match";
-import { mockCandidateMatches } from "@/lib/mock-data";
+import { auth } from "@/lib/auth";
 import type { AnalysisResult } from "@/lib/types";
+
+const MAX_RESUMES_PER_BATCH = 20;
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check — prevent unauthenticated API cost abuse
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { analysis, resumes } = body as {
       analysis: AnalysisResult;
@@ -18,26 +26,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if API key is configured
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey || apiKey === "your-api-key-here") {
-      // Return mock data — one per uploaded resume, cycling through mocks
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      const mockResults = resumes.map(
-        (r: { fileName: string; text: string }, i: number) => ({
-          ...mockCandidateMatches[i % mockCandidateMatches.length],
-          id: `candidate-${Date.now()}-${i}`,
-          resumeFileName: r.fileName,
-        })
+    // Cap batch size to prevent API cost abuse
+    if (resumes.length > MAX_RESUMES_PER_BATCH) {
+      return NextResponse.json(
+        { error: `Maximum ${MAX_RESUMES_PER_BATCH} resumes per batch` },
+        { status: 400 }
       );
-      return NextResponse.json({ candidates: mockResults, _mock: true });
     }
 
-    // Real Claude-powered matching — process all resumes in parallel
+    // Filter out empty resumes
+    const validResumes = resumes.filter((r) => r.text?.trim().length > 0);
+    if (!validResumes.length) {
+      return NextResponse.json(
+        { error: "All uploaded resumes are empty" },
+        { status: 400 }
+      );
+    }
+
     const candidates = await Promise.all(
-      resumes.map((r: { fileName: string; text: string }) =>
-        matchCandidate(analysis, r.text, r.fileName)
-      )
+      validResumes.map((r) => matchCandidate(analysis, r.text, r.fileName))
     );
 
     return NextResponse.json({ candidates });

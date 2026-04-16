@@ -24,7 +24,10 @@ import {
   Copy,
   Mail,
   Send,
+  Kanban,
 } from "lucide-react";
+import { useKanbanStore } from "@/store/use-kanban-store";
+import type { PipelineCandidate } from "@/types/kanban";
 import { cn } from "@/lib/utils";
 import type { CandidateMatch, DimensionScore, AnalysisResult } from "@/lib/types";
 
@@ -178,8 +181,25 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
   const [candidateEmail, setCandidateEmail] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const verdict = verdictConfig[candidate.verdict];
+  const [addedToPipeline, setAddedToPipeline] = useState(false);
+  const [addingToPipeline, setAddingToPipeline] = useState(false);
+  const addCandidate = useKanbanStore((s) => s.addCandidate);
+  // Safely resolve verdict — AI may return unexpected casing or values
+  const verdictKey = (Object.keys(verdictConfig) as Array<keyof typeof verdictConfig>).find(
+    (k) => k.toLowerCase() === (candidate.verdict || "").toLowerCase()
+  ) || "Screen";
+  const verdict = verdictConfig[verdictKey];
   const VerdictIcon = verdict.icon;
+
+  // Safely resolve readiness
+  const readinessKey = (Object.keys(readinessConfig) as Array<keyof typeof readinessConfig>).find(
+    (k) => k.toLowerCase() === (candidate.submissionReadiness || "").toLowerCase()
+  ) || "Medium";
+
+  // Safe arrays (AI may omit these)
+  const strengths = candidate.strengths || [];
+  const risks = candidate.risks || [];
+  const missingSkills = candidate.missingSkills || [];
 
   const handleSendEmail = async () => {
     if (!assessLink || !candidateEmail) return;
@@ -200,8 +220,8 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
       if (data.sent) {
         setEmailSent(true);
       } else if (data.fallback === "mailto") {
-        // Open mailto link as fallback
-        window.open(data.mailtoLink, "_blank");
+        // Use location.href for mailto (window.open shows blank tab in Chrome)
+        window.location.href = data.mailtoLink;
         setEmailSent(true);
       }
     } catch {
@@ -212,13 +232,59 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
       const body = encodeURIComponent(
         `Hi ${candidate.candidateName},\n\nPlease complete your assessment:\n${assessLink}`
       );
-      window.open(
-        `mailto:${candidateEmail}?subject=${subject}&body=${body}`,
-        "_blank"
-      );
+      window.location.href = `mailto:${candidateEmail}?subject=${subject}&body=${body}`;
       setEmailSent(true);
     } finally {
       setSendingEmail(false);
+    }
+  };
+
+  const handleAddToPipeline = async () => {
+    if (addedToPipeline || addingToPipeline) return;
+    setAddingToPipeline(true);
+    try {
+      // Build a PipelineCandidate from the CandidateMatch
+      const pipelineCandidate: PipelineCandidate = {
+        id: `pipe-${candidate.id}`,
+        name: candidate.candidateName,
+        email: "",
+        matchScore: candidate.overallScore,
+        matchBreakdown: {
+          skills: candidate.dimensions?.skillMatch?.score ?? candidate.overallScore,
+          culture: candidate.dimensions?.clientFit?.score ?? candidate.overallScore,
+          seniority: candidate.dimensions?.experienceFit?.score ?? candidate.overallScore,
+        },
+        source: "other",
+        priority: candidate.overallScore >= 75 ? "high" : candidate.overallScore >= 50 ? "medium" : "low",
+        stage: verdictKey === "Submit" ? "sourced" : verdictKey === "Screen" ? "screened" : "rejected",
+        order: 0,
+        jobId: analysis?.id ?? "unknown",
+        jobTitle: analysis?.jobTitle ?? "",
+        clientName: analysis?.clientName ?? "",
+        skillBreakdown: candidate.missingSkills?.length
+          ? candidate.missingSkills.map((s) => ({ skill: s, score: 30, verdict: "weak" as const }))
+          : undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        movedAt: new Date().toISOString(),
+      };
+
+      // Add to local Zustand store immediately (optimistic)
+      addCandidate(pipelineCandidate);
+
+      // Persist to Supabase in background
+      await fetch("/api/pipeline/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidate, analysis }),
+      });
+
+      setAddedToPipeline(true);
+    } catch {
+      // Still marked as added since Zustand store has it
+      setAddedToPipeline(true);
+    } finally {
+      setAddingToPipeline(false);
     }
   };
 
@@ -251,12 +317,12 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
                 )}
               >
                 <VerdictIcon className="w-3 h-3 inline mr-0.5 -mt-px" />
-                {candidate.verdict}
+                {verdictKey}
               </span>
               <span
                 className={cn(
                   "text-[10px] font-medium px-2 py-0.5 rounded-full",
-                  readinessConfig[candidate.submissionReadiness]
+                  readinessConfig[readinessKey]
                 )}
               >
                 {candidate.submissionReadiness} Readiness
@@ -281,6 +347,28 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
               </span>
             </div>
           </div>
+
+          {/* Add to Pipeline button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleAddToPipeline(); }}
+            disabled={addedToPipeline || addingToPipeline}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0",
+              addedToPipeline
+                ? "bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default"
+                : "bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200"
+            )}
+            title="Add to Pipeline"
+          >
+            {addingToPipeline ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : addedToPipeline ? (
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            ) : (
+              <Kanban className="w-3.5 h-3.5" />
+            )}
+            {addedToPipeline ? "In Pipeline" : "Add to Pipeline"}
+          </button>
 
           {/* Expand toggle */}
           <button className="text-slate-400 hover:text-slate-600 shrink-0">
@@ -307,7 +395,7 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
               Dimension Breakdown
             </h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(candidate.dimensions).map(([key, dim]) => (
+              {Object.entries(candidate.dimensions || {}).map(([key, dim]) => (
                 <DimensionBar key={key} dimension={dim} dimKey={key} />
               ))}
             </div>
@@ -320,7 +408,7 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
                 Strengths
               </h5>
               <ul className="space-y-1.5">
-                {candidate.strengths.map((s, i) => (
+                {strengths.map((s, i) => (
                   <li
                     key={i}
                     className="text-xs text-slate-600 flex items-start gap-1.5"
@@ -336,7 +424,7 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
                 Risks
               </h5>
               <ul className="space-y-1.5">
-                {candidate.risks.map((r, i) => (
+                {risks.map((r, i) => (
                   <li
                     key={i}
                     className="text-xs text-slate-600 flex items-start gap-1.5"
@@ -352,7 +440,7 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
                 Missing Skills
               </h5>
               <ul className="space-y-1.5">
-                {candidate.missingSkills.map((m, i) => (
+                {missingSkills.map((m, i) => (
                   <li
                     key={i}
                     className="text-xs text-slate-600 flex items-start gap-1.5"
@@ -376,7 +464,7 @@ export function CandidateCard({ candidate, rank, analysis }: CandidateCardProps)
           </div>
 
           {/* Assessment generation + email */}
-          {candidate.verdict !== "Reject" && (
+          {verdictKey !== "Reject" && (
             <div className="space-y-3">
               {!assessLink ? (
                 <button

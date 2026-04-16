@@ -95,7 +95,7 @@ export function Hero() {
               <div>
                 <p className="text-sm font-semibold text-slate-900 mb-1">Have a team?</p>
                 <p className="text-sm text-slate-500 leading-relaxed">
-                  Our AI platform makes them 10x faster. Free for 10 JDs/month.
+                  Our AI platform makes them 10x faster. Free for 5 JDs/month.
                 </p>
               </div>
             </div>
@@ -111,7 +111,7 @@ export function Hero() {
               className="inline-flex items-center justify-center h-13 px-8 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl shadow-xl shadow-brand-500/20 transition-all duration-200 text-base gap-2 animate-pulse-ring"
             >
               <Sparkles className="w-4 h-4" />
-              Start Free — 10 JDs/month
+              Start Free — 5 JDs/month
             </Link>
             <Link
               href="/contact"

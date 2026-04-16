@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import crypto from "crypto";
 import type {
   AnalysisResult,
   CandidateMatch,
@@ -36,9 +37,9 @@ function buildAssessPrompt(
 - Experience: ${candidate.experience}
 - Overall Score: ${candidate.overallScore}/100
 - Verdict: ${candidate.verdict}
-- Key Strengths: ${candidate.strengths.join("; ")}
-- Key Risks: ${candidate.risks.join("; ")}
-- Missing Skills: ${candidate.missingSkills.join(", ")}
+- Key Strengths: ${(candidate.strengths ?? []).join("; ")}
+- Key Risks: ${(candidate.risks ?? []).join("; ")}
+- Missing Skills: ${(candidate.missingSkills ?? []).join(", ")}
 - Recruiter Guidance: ${candidate.recruiterGuidance}
 
 ---
@@ -129,13 +130,21 @@ Respond ONLY with the JSON object. No markdown fences.`;
 }
 
 function parseJSON(raw: string): Record<string, unknown> {
+  if (!raw || !raw.trim()) {
+    throw new Error("Empty response from AI model");
+  }
   let cleaned = raw.trim();
   if (cleaned.startsWith("```")) {
     cleaned = cleaned
       .replace(/^```(?:json)?\s*\n?/, "")
       .replace(/\n?```\s*$/, "");
   }
-  return JSON.parse(cleaned);
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    console.error("Failed to parse AI response:", cleaned.substring(0, 200));
+    throw new Error("AI returned invalid JSON. Please try again.");
+  }
 }
 
 export async function generateAssessment(
@@ -159,14 +168,21 @@ export async function generateAssessment(
     }
   }
 
-  const parsed = parseJSON(responseText) as unknown as AssessmentQuestion[];
+  const parsed = parseJSON(responseText);
+  // Ensure we got an array (Claude may wrap in an object like {questions: [...]})
+  let questions: Record<string, unknown>[];
+  if (Array.isArray(parsed)) {
+    questions = parsed;
+  } else if (Array.isArray((parsed as any).questions)) {
+    questions = (parsed as any).questions;
+  } else {
+    throw new Error("AI returned unexpected format for assessment questions");
+  }
   // Add IDs to each question
-  return (parsed as unknown as Omit<AssessmentQuestion, "id">[]).map(
-    (q, i) => ({
-      ...q,
-      id: `q-${Date.now()}-${i}`,
-    })
-  );
+  return questions.map((q, i) => ({
+    ...q,
+    id: crypto.randomUUID ? crypto.randomUUID() : `q-${Date.now()}-${i}`,
+  })) as AssessmentQuestion[];
 }
 
 export async function evaluateAssessment(

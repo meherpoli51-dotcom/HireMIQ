@@ -21,10 +21,11 @@ const platformColors: Record<string, string> = {
 export function SourceIQTab({ data }: { data: SourceIQOutput }) {
   const [editedStrings, setEditedStrings] = useState<Record<number, string>>({});
 
-  const platforms = [...new Set(data.booleanStrings.map((b) => b.platform))];
-  const [activePlatform, setActivePlatform] = useState(platforms[0]);
+  const booleanStrings = data.booleanStrings ?? [];
+  const platforms = [...new Set(booleanStrings.map((b) => b.platform))];
+  const [activePlatform, setActivePlatform] = useState(platforms[0] || "");
 
-  const filteredStrings = data.booleanStrings.filter(
+  const filteredStrings = booleanStrings.filter(
     (b) => b.platform === activePlatform
   );
 

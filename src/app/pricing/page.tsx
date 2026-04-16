@@ -13,9 +13,9 @@ import { LandingNavbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 
 export const metadata: Metadata = {
-  title: "Pricing — HireMIQ | Free for 10 JDs, ₹499/month Pro",
+  title: "Pricing — HireMIQ | Free for 5 JDs, ₹499/month Pro",
   description:
-    "Simple, transparent pricing. Free for 10 JD analyses per month. Pro plan at ₹499/month for unlimited analyses, 8 AI modules, and team features.",
+    "Simple, transparent pricing. Free for 5 JD analyses per month. Pro plan at ₹499/month for unlimited analyses, 8 AI modules, and team features.",
 };
 
 // ─── Pricing plans ────────────────────────────────────────────────────────────
@@ -28,7 +28,7 @@ const PLANS = [
     badge: null,
     description: "Get started instantly. No credit card, no commitment.",
     features: [
-      "10 JD analyses per month",
+      "5 JD analyses per month",
       "All 8 AI intelligence modules",
       "Boolean search string generation",
       "Candidate match scoring",
@@ -113,7 +113,7 @@ const TABLE_ROWS: TableRow[] = [
   },
   {
     feature: "JD Analysis",
-    free: "✓ (10/mo)",
+    free: "✓ (5/mo)",
     pro: "✓ Unlimited",
     linkedin: false,
     agency: false,
@@ -215,7 +215,7 @@ const MINI_FAQ = [
   },
   {
     q: "Is the free plan limited time?",
-    a: "No, Free is free forever. 10 analyses per month, always.",
+    a: "No, Free is free forever. 5 analyses per month, always.",
   },
   {
     q: "Do you offer a refund?",

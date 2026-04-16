@@ -160,7 +160,7 @@ export default function LoginPage() {
           <p className="text-sm text-slate-500 text-center mt-6">
             Don&apos;t have an account?{" "}
             <Link
-              href="/login"
+              href="/pricing"
               className="text-blue-600 hover:text-blue-700 font-medium"
             >
               Start free trial

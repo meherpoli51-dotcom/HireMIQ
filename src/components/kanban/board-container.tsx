@@ -13,7 +13,7 @@
  * - onDragEnd commits the move to the store (optimistic update)
  */
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -28,7 +28,6 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-
 import { useKanbanStore } from "@/store/use-kanban-store";
 import { PIPELINE_STAGES, type PipelineStage } from "@/types/kanban";
 import { KanbanColumn } from "./kanban-column";
@@ -59,8 +58,10 @@ function resolveStage(
 /* ------------------------------------------------------------------ */
 
 export function BoardContainer() {
-  const { candidates, columns, moveCandidate, reorderInColumn } =
-    useKanbanStore();
+  const candidates      = useKanbanStore((s) => s.candidates);
+  const columns         = useKanbanStore((s) => s.columns);
+  const moveCandidate   = useKanbanStore((s) => s.moveCandidate);
+  const reorderInColumn = useKanbanStore((s) => s.reorderInColumn);
 
   /** ID of the card currently being dragged (for DragOverlay) */
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -85,8 +86,9 @@ export function BoardContainer() {
     }),
   );
 
-  /* ── Candidate stage lookup (memoized to avoid recalc on every render) ── */
-  const candidateStages = useMemo<Record<string, PipelineStage>>(() => {
+  /* ── Candidate stage lookup — stored in ref so handlers never stale-close ── */
+  const candidateStagesRef = useRef<Record<string, PipelineStage>>({});
+  candidateStagesRef.current = useMemo<Record<string, PipelineStage>>(() => {
     const map: Record<string, PipelineStage> = {};
     for (const [id, c] of Object.entries(candidates)) {
       map[id] = c.stage;
@@ -94,66 +96,60 @@ export function BoardContainer() {
     return map;
   }, [candidates]);
 
+  const columnsRef = useRef(columns);
+  columnsRef.current = columns;
+
   /* ── Drag Start ── */
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(String(event.active.id));
   }, []);
 
   /* ── Drag Over (real-time column highlight) ── */
-  const handleDragOver = useCallback(
-    (event: DragOverEvent) => {
-      const overId = event.over ? String(event.over.id) : null;
-      if (!overId) {
-        setOverStage(null);
-        return;
-      }
-      const stage = resolveStage(overId, candidateStages);
-      setOverStage(stage);
-    },
-    [candidateStages],
-  );
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    const overId = event.over ? String(event.over.id) : null;
+    if (!overId) {
+      setOverStage(null);
+      return;
+    }
+    const stage = resolveStage(overId, candidateStagesRef.current);
+    setOverStage(stage);
+  }, []);
 
   /* ── Drag End (commit move to store) ── */
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
 
-      setActiveId(null);
-      setOverStage(null);
+    setActiveId(null);
+    setOverStage(null);
 
-      if (!over) return;
+    if (!over) return;
 
-      const candidateId = String(active.id);
-      const overId = String(over.id);
+    const candidateId = String(active.id);
+    const overId = String(over.id);
 
-      const fromStage = candidateStages[candidateId];
-      const toStage = resolveStage(overId, candidateStages);
+    const fromStage = candidateStagesRef.current[candidateId];
+    const toStage = resolveStage(overId, candidateStagesRef.current);
 
-      if (!fromStage || !toStage) return;
+    if (!fromStage || !toStage) return;
 
-      // Determine drop index inside target column
-      const targetColumn = columns[toStage];
-      let newIndex = targetColumn.length; // default: end of column
+    const cols = columnsRef.current;
+    const targetColumn = cols[toStage];
+    let newIndex = targetColumn.length;
 
-      if (overId !== toStage) {
-        // Dropped over another card — insert before/after it
-        const overIndex = targetColumn.indexOf(overId);
-        if (overIndex !== -1) newIndex = overIndex;
+    if (overId !== toStage) {
+      const overIndex = targetColumn.indexOf(overId);
+      if (overIndex !== -1) newIndex = overIndex;
+    }
+
+    if (fromStage === toStage) {
+      const fromIndex = cols[fromStage].indexOf(candidateId);
+      if (fromIndex !== -1 && fromIndex !== newIndex) {
+        reorderInColumn(fromStage, fromIndex, newIndex);
       }
-
-      if (fromStage === toStage) {
-        // Same-column reorder
-        const fromIndex = columns[fromStage].indexOf(candidateId);
-        if (fromIndex !== -1 && fromIndex !== newIndex) {
-          reorderInColumn(fromStage, fromIndex, newIndex);
-        }
-      } else {
-        // Cross-column move
-        moveCandidate({ candidateId, fromStage, toStage, newIndex });
-      }
-    },
-    [candidateStages, columns, moveCandidate, reorderInColumn],
-  );
+    } else {
+      moveCandidate({ candidateId, fromStage, toStage, newIndex });
+    }
+  }, [moveCandidate, reorderInColumn]);
 
   /* ── Active (dragging) candidate for overlay ── */
   const activeCandidate = activeId ? candidates[activeId] : null;

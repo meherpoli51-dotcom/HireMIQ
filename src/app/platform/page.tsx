@@ -94,7 +94,7 @@ const benefits = [
   },
   {
     title: "Transparent pricing",
-    description: "Free for 10 JDs/month. Pro at ₹499/month. No hidden fees.",
+    description: "Free for 5 JDs/month. Pro at ₹499/month. No hidden fees.",
   },
 ];
 
@@ -263,7 +263,7 @@ export default function PlatformPage() {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <CheckCircle className="w-4 h-4 text-brand-500" />
-                  10 JD analyses/month
+                  5 JD analyses/month
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-600">
                   <CheckCircle className="w-4 h-4 text-brand-500" />

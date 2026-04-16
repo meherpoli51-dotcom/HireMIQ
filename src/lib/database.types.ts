@@ -97,6 +97,199 @@ export interface Database {
           Database["public"]["Tables"]["assessment_responses"]["Insert"]
         >;
       };
+      workspaces: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          owner_id: string;
+          tier: 'free' | 'pro' | 'enterprise';
+          logo_url: string | null;
+          timezone: string;
+          members_count: number;
+          max_members: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          owner_id: string;
+          tier?: 'free' | 'pro' | 'enterprise';
+          logo_url?: string | null;
+          timezone?: string;
+          members_count?: number;
+          max_members?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["workspaces"]["Insert"]>;
+      };
+      workspace_members: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          user_id: string;
+          role: 'owner' | 'admin' | 'recruiter' | 'viewer';
+          invited_at: string;
+          accepted_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          user_id: string;
+          role?: 'owner' | 'admin' | 'recruiter' | 'viewer';
+          invited_at?: string;
+          accepted_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["workspace_members"]["Insert"]>;
+      };
+      subscriptions: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          razorpay_subscription_id: string | null;
+          razorpay_customer_id: string | null;
+          status: 'pending' | 'active' | 'paused' | 'payment_failed' | 'cancelled' | 'expired';
+          plan: 'free' | 'pro' | 'enterprise';
+          amount_paisa: number | null;
+          billing_cycle_start: string | null;
+          billing_cycle_end: string | null;
+          paid_until: string | null;
+          attempted_charge_date: string | null;
+          failure_reason: string | null;
+          failure_count: number;
+          started_at: string;
+          cancelled_at: string | null;
+          cancellation_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          razorpay_subscription_id?: string | null;
+          razorpay_customer_id?: string | null;
+          status?: 'pending' | 'active' | 'paused' | 'payment_failed' | 'cancelled' | 'expired';
+          plan?: 'free' | 'pro' | 'enterprise';
+          amount_paisa?: number | null;
+          billing_cycle_start?: string | null;
+          billing_cycle_end?: string | null;
+          paid_until?: string | null;
+          attempted_charge_date?: string | null;
+          failure_reason?: string | null;
+          failure_count?: number;
+          started_at?: string;
+          cancelled_at?: string | null;
+          cancellation_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["subscriptions"]["Insert"]>;
+      };
+      usage: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          user_id: string;
+          action: 'jd_analyze' | 'candidate_assess' | 'resume_parse';
+          resource_id: string | null;
+          job_title: string | null;
+          client_name: string | null;
+          credits_consumed: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          user_id: string;
+          action: 'jd_analyze' | 'candidate_assess' | 'resume_parse';
+          resource_id?: string | null;
+          job_title?: string | null;
+          client_name?: string | null;
+          credits_consumed?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["usage"]["Insert"]>;
+      };
+      usage_monthly_rollup: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          year_month: string;
+          total_jd_analyses: number;
+          total_assessments: number;
+          total_candidates_matched: number;
+          credits_used: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          year_month: string;
+          total_jd_analyses?: number;
+          total_assessments?: number;
+          total_candidates_matched?: number;
+          credits_used?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["usage_monthly_rollup"]["Insert"]>;
+      };
+      credit_transactions: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          transaction_type: 'monthly_reset' | 'usage_charge' | 'team_bonus' | 'rollover' | 'overage' | 'manual_adjustment';
+          credits_delta: number;
+          balance_before: number | null;
+          balance_after: number | null;
+          reason: string | null;
+          related_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          workspace_id: string;
+          transaction_type: 'monthly_reset' | 'usage_charge' | 'team_bonus' | 'rollover' | 'overage' | 'manual_adjustment';
+          credits_delta: number;
+          balance_before?: number | null;
+          balance_after?: number | null;
+          reason?: string | null;
+          related_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["credit_transactions"]["Insert"]>;
+      };
+      webhook_events: {
+        Row: {
+          id: string;
+          event_type: string;
+          source: string;
+          entity_id: string | null;
+          status: 'pending' | 'processed' | 'failed';
+          error_message: string | null;
+          processed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          event_type: string;
+          source?: string;
+          entity_id?: string | null;
+          status?: 'pending' | 'processed' | 'failed';
+          error_message?: string | null;
+          processed_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["webhook_events"]["Insert"]>;
+      };
     };
   };
 }

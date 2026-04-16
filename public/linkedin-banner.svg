@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1584 396" fill="none">
+  <!-- Background -->
+  <rect width="1584" height="396" fill="#0F0E2A"/>
+
+  <!-- Dot grid pattern - left side (decorative, fades out) -->
+  <g opacity="0.08">
+    <circle cx="60" cy="60" r="3" fill="#7C6FD4"/>
+    <circle cx="110" cy="60" r="3" fill="#7C6FD4"/>
+    <circle cx="160" cy="60" r="3" fill="#7C6FD4"/>
+    <circle cx="210" cy="60" r="3" fill="#7C6FD4"/>
+    <circle cx="260" cy="60" r="3" fill="#7C6FD4"/>
+    <circle cx="310" cy="60" r="3" fill="#7C6FD4"/>
+    <circle cx="360" cy="60" r="3" fill="#7C6FD4"/>
+    <circle cx="60" cy="110" r="3" fill="#7C6FD4"/>
+    <circle cx="110" cy="110" r="3" fill="#7C6FD4"/>
+    <circle cx="160" cy="110" r="3" fill="#7C6FD4"/>
+    <circle cx="210" cy="110" r="3" fill="#7C6FD4"/>
+    <circle cx="260" cy="110" r="3" fill="#7C6FD4"/>
+    <circle cx="310" cy="110" r="3" fill="#7C6FD4"/>
+    <circle cx="360" cy="110" r="3" fill="#7C6FD4"/>
+    <circle cx="60" cy="160" r="3" fill="#7C6FD4"/>
+    <circle cx="110" cy="160" r="3" fill="#7C6FD4"/>
+    <circle cx="160" cy="160" r="3" fill="#7C6FD4"/>
+    <circle cx="210" cy="160" r="3" fill="#7C6FD4"/>
+    <circle cx="260" cy="160" r="3" fill="#7C6FD4"/>
+    <circle cx="310" cy="160" r="3" fill="#7C6FD4"/>
+    <circle cx="360" cy="160" r="3" fill="#7C6FD4"/>
+    <circle cx="60" cy="210" r="3" fill="#7C6FD4"/>
+    <circle cx="110" cy="210" r="3" fill="#7C6FD4"/>
+    <circle cx="160" cy="210" r="3" fill="#7C6FD4"/>
+    <circle cx="210" cy="210" r="3" fill="#7C6FD4"/>
+    <circle cx="260" cy="210" r="3" fill="#7C6FD4"/>
+    <circle cx="310" cy="210" r="3" fill="#7C6FD4"/>
+    <circle cx="360" cy="210" r="3" fill="#7C6FD4"/>
+    <circle cx="60" cy="260" r="3" fill="#7C6FD4"/>
+    <circle cx="110" cy="260" r="3" fill="#7C6FD4"/>
+    <circle cx="160" cy="260" r="3" fill="#7C6FD4"/>
+    <circle cx="210" cy="260" r="3" fill="#7C6FD4"/>
+    <circle cx="260" cy="260" r="3" fill="#7C6FD4"/>
+    <circle cx="310" cy="260" r="3" fill="#7C6FD4"/>
+    <circle cx="360" cy="260" r="3" fill="#7C6FD4"/>
+    <circle cx="60" cy="310" r="3" fill="#7C6FD4"/>
+    <circle cx="110" cy="310" r="3" fill="#7C6FD4"/>
+    <circle cx="160" cy="310" r="3" fill="#7C6FD4"/>
+    <circle cx="210" cy="310" r="3" fill="#7C6FD4"/>
+    <circle cx="260" cy="310" r="3" fill="#7C6FD4"/>
+    <circle cx="310" cy="310" r="3" fill="#7C6FD4"/>
+    <circle cx="360" cy="310" r="3" fill="#7C6FD4"/>
+    <circle cx="60" cy="360" r="3" fill="#7C6FD4"/>
+    <circle cx="110" cy="360" r="3" fill="#7C6FD4"/>
+    <circle cx="160" cy="360" r="3" fill="#7C6FD4"/>
+    <circle cx="210" cy="360" r="3" fill="#7C6FD4"/>
+    <circle cx="260" cy="360" r="3" fill="#7C6FD4"/>
+    <circle cx="310" cy="360" r="3" fill="#7C6FD4"/>
+    <circle cx="360" cy="360" r="3" fill="#7C6FD4"/>
+  </g>
+
+  <!-- Gradient: left dark, right slightly lighter -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0F0E2A" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#0F0E2A" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#0F0E2A" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="accentLine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5B4FBF" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#5B4FBF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1584" height="396" fill="url(#bgGrad)"/>
+
+  <!-- Right accent bar -->
+  <rect x="1508" y="80" width="4" height="236" rx="2" fill="#5B4FBF"/>
+
+  <!-- Logo icon (top right) -->
+  <rect x="880" y="68" width="52" height="52" rx="10" fill="#5B4FBF"/>
+  <line x1="893" y1="94" x2="919" y2="94" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.5"/>
+  <line x1="906" y1="81" x2="906" y2="107" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.5"/>
+  <circle cx="893" cy="94" r="4" fill="#FFFFFF"/>
+  <circle cx="919" cy="94" r="4" fill="#FFFFFF"/>
+  <circle cx="906" cy="81" r="4" fill="#FFFFFF"/>
+  <circle cx="906" cy="107" r="4" fill="#FFFFFF"/>
+  <circle cx="906" cy="94" r="6.5" fill="#1E1B4B"/>
+  <circle cx="906" cy="94" r="3.5" fill="#FFFFFF"/>
+
+  <!-- Wordmark next to icon -->
+  <text x="942" y="102" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#FFFFFF">Hire<tspan fill="#A78BFA">MIQ</tspan></text>
+
+  <!-- Main headline -->
+  <text x="820" y="188" font-family="Georgia, serif" font-size="48" font-weight="700" fill="#FFFFFF" letter-spacing="-0.5">Recruitment Intelligence,</text>
+  <text x="820" y="248" font-family="Georgia, serif" font-size="48" font-weight="700" fill="#A78BFA" letter-spacing="-0.5">Redefined.</text>
+
+  <!-- Subline -->
+  <text x="820" y="292" font-family="Arial, sans-serif" font-size="18" fill="#A5A3C2" letter-spacing="0.3">AI-powered Match IQ  ·  Candidate Pipeline  ·  Skill Assessments</text>
+
+  <!-- Divider -->
+  <rect x="820" y="318" width="480" height="2" rx="1" fill="url(#accentLine)"/>
+
+  <!-- Bottom tagline -->
+  <text x="820" y="352" font-family="Arial, sans-serif" font-size="13" fill="#6B6990" letter-spacing="2">HIRE SMARTER. HIRE FASTER.  ·  hiremiq.com</text>
+</svg>

@@ -95,7 +95,7 @@ const services: Service[] = [
     title: "AI Platform Access",
     bestFor: "Agencies and in-house teams who want AI-powered tools to supercharge their own sourcing",
     description:
-      "Access our full suite of AI recruitment intelligence modules — JD IQ, Skill IQ, Boolean IQ, Outreach IQ, and more. Turn any messy job description into recruiter-ready workflows in minutes. Free for 10 JDs/month, unlimited at just ₹499/month.",
+      "Access our full suite of AI recruitment intelligence modules — JD IQ, Skill IQ, Boolean IQ, Outreach IQ, and more. Turn any messy job description into recruiter-ready workflows in minutes. Free for 5 JDs/month, unlimited at just ₹499/month.",
     included: [
       "8 AI-powered intelligence modules",
       "JD decoding and role clarity analysis",
@@ -103,7 +103,7 @@ const services: Service[] = [
       "Candidate scoring and match intelligence",
       "AI-generated proctored assessments",
       "Outreach sequence builder with personalization",
-      "Free: 10 JDs/month — Pro: ₹499/month unlimited",
+      "Free: 5 JDs/month — Pro: ₹499/month unlimited",
     ],
     cta: "Try the platform free",
     ctaHref: "/login",

@@ -1,15 +1,25 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Upload, Sparkles, Loader2, FileText, X, CheckCircle2 } from "lucide-react";
+import { Upload, Sparkles, Loader2, FileText, X, CheckCircle2, Zap, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AutocompleteInput } from "./autocomplete-input";
-import { clientSuggestions, locationSuggestions, sampleJDText } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
 import type { JDInput } from "@/lib/types";
+
+interface CreditInfo {
+  monthly_limit: number;
+  monthly_used: number;
+  total_available: number;
+  percent_used: number;
+  resets_at: string;
+}
 
 interface InputPanelProps {
   onAnalyze: (input: JDInput) => void;
   isAnalyzing: boolean;
+  credits?: CreditInfo | null;
+  onUpgradeClick?: () => void;
 }
 
 const defaultInput: JDInput = {
@@ -30,7 +40,7 @@ const defaultInput: JDInput = {
   recruiterNotes: "",
 };
 
-export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
+export function InputPanel({ onAnalyze, isAnalyzing, credits, onUpgradeClick }: InputPanelProps) {
   const [input, setInput] = useState<JDInput>(defaultInput);
   const [triedSubmit, setTriedSubmit] = useState(false);
   const [uploadState, setUploadState] = useState<
@@ -43,26 +53,6 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
 
   const update = (field: keyof JDInput, value: string) => {
     setInput((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleLoadSample = () => {
-    setInput({
-      ...input,
-      jobTitle: "Senior Full Stack Engineer",
-      jdText: sampleJDText,
-      clientName: "PayScale Technologies",
-      location: "Bangalore, India",
-      budgetMin: "35",
-      budgetMax: "55",
-      budgetType: "LPA",
-      experienceMin: "5",
-      experienceMax: "8",
-      workMode: "Hybrid",
-      employmentType: "Full-time",
-      priorityLevel: "High",
-    });
-    setUploadState("idle");
-    setUploadedFile("");
   };
 
   const processFile = useCallback(async (file: File) => {
@@ -192,12 +182,6 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
       <div className="px-5 py-4 border-b border-slate-100">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-900">JD Input</h2>
-          <button
-            onClick={handleLoadSample}
-            className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
-          >
-            Load Sample JD
-          </button>
         </div>
       </div>
 
@@ -318,7 +302,7 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
           placeholder="Start typing company name..."
           value={input.clientName}
           onChange={(v) => update("clientName", v)}
-          suggestions={clientSuggestions}
+          suggestions={[]}
           required
           showError={triedSubmit}
         />
@@ -329,7 +313,7 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
           placeholder="End client (if staffing)"
           value={input.endClient}
           onChange={(v) => update("endClient", v)}
-          suggestions={clientSuggestions}
+          suggestions={[]}
           optional
         />
 
@@ -339,7 +323,7 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
           placeholder="Start typing city..."
           value={input.location}
           onChange={(v) => update("location", v)}
-          suggestions={locationSuggestions}
+          suggestions={[]}
           required
           showError={triedSubmit}
         />
@@ -491,34 +475,80 @@ export function InputPanel({ onAnalyze, isAnalyzing }: InputPanelProps) {
       </div>
 
       {/* CTA */}
-      <div className="px-5 py-4 border-t border-slate-100">
+      <div className="px-5 py-4 border-t border-slate-100 space-y-3">
+        {/* Credit usage mini-bar */}
+        {credits && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs text-slate-600">
+                  {credits.monthly_used} / {credits.monthly_limit} analyses used
+                </span>
+              </div>
+              {credits.total_available > 0 && (
+                <span className="text-xs text-slate-400">
+                  {credits.total_available} left
+                </span>
+              )}
+            </div>
+            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  credits.percent_used >= 100
+                    ? "bg-rose-500"
+                    : credits.percent_used >= 80
+                      ? "bg-amber-500"
+                      : "bg-emerald-500"
+                )}
+                style={{ width: `${Math.min(100, credits.percent_used)}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {triedSubmit && (!input.clientName.trim() || !input.location.trim()) && (
-          <p className="text-xs text-rose-500 mb-2">
+          <p className="text-xs text-rose-500">
             Please fill in Client Name and Location to proceed.
           </p>
         )}
-        <Button
-          onClick={() => {
-            setTriedSubmit(true);
-            if (!input.clientName.trim() || !input.location.trim()) return;
-            if (!input.jdText && !input.jobTitle) return;
-            onAnalyze(input);
-          }}
-          disabled={isAnalyzing}
-          className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm disabled:opacity-50 text-sm"
-        >
-          {isAnalyzing ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Analyzing JD...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 mr-2" />
-              Analyze JD
-            </>
-          )}
-        </Button>
+
+        {/* Analyze button — blocked when no credits */}
+        {credits && credits.total_available <= 0 ? (
+          <button
+            onClick={onUpgradeClick}
+            className="w-full h-11 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-sm text-sm transition-all"
+          >
+            <AlertCircle className="w-4 h-4" />
+            Upgrade to Pro — ₹499/month
+          </button>
+        ) : (
+          <Button
+            onClick={() => {
+              setTriedSubmit(true);
+              if (!input.jobTitle.trim()) return;
+              if (!input.clientName.trim()) return;
+              if (!input.location.trim()) return;
+              if (!input.jdText.trim()) return;
+              onAnalyze(input);
+            }}
+            disabled={isAnalyzing}
+            className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm disabled:opacity-50 text-sm"
+          >
+            {isAnalyzing ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Analyzing JD...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Analyze JD
+              </>
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -27,9 +27,11 @@ export function CandidateList({ candidates, analysis }: CandidateListProps) {
     if (sortBy === "score") return b.overallScore - a.overallScore;
     if (sortBy === "name")
       return a.candidateName.localeCompare(b.candidateName);
-    // verdict priority: Submit > Screen > Reject
-    const order = { Submit: 0, Screen: 1, Reject: 2 };
-    return order[a.verdict] - order[b.verdict];
+    // verdict priority: Submit > Screen > Reject (case-insensitive)
+    const order: Record<string, number> = { submit: 0, screen: 1, reject: 2 };
+    const aOrder = order[(a.verdict || "").toLowerCase()] ?? 2;
+    const bOrder = order[(b.verdict || "").toLowerCase()] ?? 2;
+    return aOrder - bOrder;
   });
 
   const submitCount = candidates.filter((c) => c.verdict === "Submit").length;

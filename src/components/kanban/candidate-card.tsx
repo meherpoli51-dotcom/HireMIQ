@@ -9,6 +9,7 @@
  * Clicking the card (not dragging) opens the detail drawer.
  */
 
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useKanbanStore } from "@/store/use-kanban-store";
@@ -136,7 +137,7 @@ interface CandidateCardProps {
 /*  Main Component                                                     */
 /* ------------------------------------------------------------------ */
 
-export function CandidateCard({ candidate, isOverlay = false }: CandidateCardProps) {
+function CandidateCardInner({ candidate, isOverlay = false }: CandidateCardProps) {
   const selectCandidate = useKanbanStore((s) => s.selectCandidate);
 
   const {
@@ -243,3 +244,5 @@ export function CandidateCard({ candidate, isOverlay = false }: CandidateCardPro
     </div>
   );
 }
+
+export const CandidateCard = memo(CandidateCardInner);

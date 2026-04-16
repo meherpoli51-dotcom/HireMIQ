@@ -40,7 +40,7 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: "Is the free plan really free?",
-        a: "Yes, genuinely free. 10 JD analyses per month, access to all 8 AI modules, no credit card required. Create an account and start immediately.",
+        a: "Yes, genuinely free. 5 JD analyses per month, access to all 8 AI modules, no credit card required. Create an account and start immediately.",
       },
       {
         q: "What does the ₹499/month Pro plan include?",
@@ -48,7 +48,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Can I switch between Free and Pro?",
-        a: "Yes, upgrade or downgrade at any time. If you downgrade, you keep Pro features until end of the billing cycle, then move to the free tier (10 analyses/month).",
+        a: "Yes, upgrade or downgrade at any time. If you downgrade, you keep Pro features until end of the billing cycle, then move to the free tier (5 analyses/month).",
       },
       {
         q: "Do you offer enterprise pricing?",

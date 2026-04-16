@@ -237,18 +237,40 @@ export function ResumeUploadPanel({
       )}
 
       {/* Match button */}
-      {files.length > 0 && (
+      {/* Scoring animation */}
+      {isMatching && (
+        <div className="relative overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_2s_infinite] -skew-x-12" />
+          <div className="relative flex items-center gap-4">
+            <div className="relative">
+              <div className="w-12 h-12 rounded-full border-3 border-blue-200 border-t-blue-600 animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Users className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-blue-900">
+                AI is scoring {readyCount} candidate{readyCount !== 1 ? "s" : ""}...
+              </p>
+              <p className="text-xs text-blue-600 mt-0.5 animate-pulse">
+                Analyzing skills, experience, and match quality
+              </p>
+            </div>
+          </div>
+          <div className="relative mt-3 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full animate-[progress_8s_ease-in-out_infinite]" />
+          </div>
+        </div>
+      )}
+
+      {/* Match button */}
+      {files.length > 0 && !isMatching && (
         <Button
           onClick={handleMatch}
-          disabled={isMatching || readyCount === 0 || parsingCount > 0 || !hasAnalysis}
+          disabled={readyCount === 0 || parsingCount > 0 || !hasAnalysis}
           className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isMatching ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Scoring {readyCount} candidate{readyCount !== 1 ? "s" : ""}...
-            </>
-          ) : parsingCount > 0 ? (
+          {parsingCount > 0 ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Parsing {parsingCount} file{parsingCount !== 1 ? "s" : ""}...
