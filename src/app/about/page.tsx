@@ -328,7 +328,7 @@ export default function AboutPage() {
               Try the Platform
             </Link>
             <a
-              href="mailto:hello@hiremiq.com"
+              href="mailto:sales@hiremiq.com"
               className="inline-flex items-center justify-center px-8 py-3.5 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white font-semibold rounded-xl transition-colors text-base gap-2"
             >
               <Mail className="w-4 h-4" />

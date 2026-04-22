@@ -165,22 +165,22 @@ export default function ContactPage() {
                 <ContactCard
                   icon={Mail}
                   label="General enquiries"
-                  value="contact@hiremiq.com"
-                  href="mailto:contact@hiremiq.com"
+                  value="sales@hiremiq.com"
+                  href="mailto:sales@hiremiq.com"
                 />
                 {/* Services */}
                 <ContactCard
                   icon={Briefcase}
                   label="For recruitment services"
-                  value="services@hiremiq.com"
-                  href="mailto:services@hiremiq.com"
+                  value="sales@hiremiq.com"
+                  href="mailto:sales@hiremiq.com"
                 />
                 {/* Platform */}
                 <ContactCard
                   icon={Monitor}
                   label="For platform enquiries"
-                  value="platform@hiremiq.com"
-                  href="mailto:platform@hiremiq.com"
+                  value="sales@hiremiq.com"
+                  href="mailto:sales@hiremiq.com"
                 />
               </div>
 
@@ -358,7 +358,7 @@ export default function ContactPage() {
               </div>
 
               <a
-                href="mailto:contact@hiremiq.com?subject=30-minute%20consultation%20request"
+                href="mailto:sales@hiremiq.com?subject=30-minute%20consultation%20request"
                 className="group inline-flex items-center gap-2 h-13 px-8 bg-white hover:bg-slate-100 text-slate-900 font-semibold rounded-xl transition-all text-sm shadow-xl shrink-0"
               >
                 Book a call

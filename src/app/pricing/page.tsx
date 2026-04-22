@@ -85,7 +85,7 @@ const PLANS = [
     ],
     notIncluded: [],
     cta: "Talk to Sales",
-    ctaHref: "mailto:hello@hiremiq.com",
+    ctaHref: "mailto:sales@hiremiq.com",
     highlighted: false,
     ctaNote: null,
   },
@@ -601,7 +601,7 @@ export default function PricingPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
-                href="mailto:hello@hiremiq.com"
+                href="mailto:sales@hiremiq.com"
                 className="flex items-center gap-2 px-7 py-3.5 rounded-xl border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-semibold text-sm transition-all duration-200"
               >
                 Talk to Sales

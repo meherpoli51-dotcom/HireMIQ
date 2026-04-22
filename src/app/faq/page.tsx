@@ -52,11 +52,11 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Do you offer enterprise pricing?",
-        a: "Yes. Contact us for custom pricing for teams of 10+, white-label options, API access, and dedicated account management. Email hello@hiremiq.com.",
+        a: "Yes. Contact us for custom pricing for teams of 10+, white-label options, API access, and dedicated account management. Email sales@hiremiq.com.",
       },
       {
         q: "Is there a refund policy?",
-        a: "Yes. If you're not satisfied in the first 14 days of Pro, we'll refund you — no questions asked. Email hello@hiremiq.com.",
+        a: "Yes. If you're not satisfied in the first 14 days of Pro, we'll refund you — no questions asked. Email sales@hiremiq.com.",
       },
     ],
   },
@@ -180,10 +180,10 @@ export default function FAQPage() {
             <p className="text-slate-400 text-base leading-relaxed">
               Email us at{" "}
               <a
-                href="mailto:hello@hiremiq.com"
+                href="mailto:sales@hiremiq.com"
                 className="text-brand-400 hover:text-brand-300 font-medium underline underline-offset-2 transition-colors"
               >
-                hello@hiremiq.com
+                sales@hiremiq.com
               </a>{" "}
               or{" "}
               <a

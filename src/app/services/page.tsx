@@ -149,7 +149,7 @@ export default function ServicesPage() {
             </p>
 
             <a
-              href="mailto:hello@hiremiq.com"
+              href="mailto:sales@hiremiq.com"
               className="inline-flex items-center justify-center px-8 py-3.5 bg-[#5B4FBF] hover:bg-[#4f3da8] text-white font-semibold rounded-xl transition-colors text-base gap-2 shadow-lg shadow-[#5B4FBF]/20"
             >
               <Calendar className="w-4 h-4" />
@@ -266,7 +266,7 @@ export default function ServicesPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="mailto:hello@hiremiq.com"
+              href="mailto:sales@hiremiq.com"
               className="inline-flex items-center justify-center px-8 py-3.5 bg-[#5B4FBF] hover:bg-[#4f3da8] text-white font-semibold rounded-xl transition-colors text-base gap-2"
             >
               <Calendar className="w-4 h-4" />

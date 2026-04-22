@@ -63,7 +63,7 @@ const plans = [
       "Volume-based pricing",
     ],
     cta: "Contact Sales",
-    ctaHref: "mailto:hello@hiremiq.com",
+    ctaHref: "mailto:sales@hiremiq.com",
     highlighted: false,
   },
 ];
