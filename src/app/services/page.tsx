@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { LandingNavbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
+import { BookConsultationButton } from "@/components/landing/book-consultation-button";
 import {
   ArrowRight,
   Check,
@@ -148,13 +149,7 @@ export default function ServicesPage() {
               bloated retainers.
             </p>
 
-            <a
-              href="mailto:sales@hiremiq.com"
-              className="inline-flex items-center justify-center px-8 py-3.5 bg-[#5B4FBF] hover:bg-[#4f3da8] text-white font-semibold rounded-xl transition-colors text-base gap-2 shadow-lg shadow-[#5B4FBF]/20"
-            >
-              <Calendar className="w-4 h-4" />
-              Book a free consultation
-            </a>
+            <BookConsultationButton />
           </div>
         </div>
       </section>
@@ -265,13 +260,7 @@ export default function ServicesPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="mailto:sales@hiremiq.com"
-              className="inline-flex items-center justify-center px-8 py-3.5 bg-[#5B4FBF] hover:bg-[#4f3da8] text-white font-semibold rounded-xl transition-colors text-base gap-2"
-            >
-              <Calendar className="w-4 h-4" />
-              Book a consultation
-            </a>
+            <BookConsultationButton />
             <Link
               href="/about"
               className="inline-flex items-center justify-center px-8 py-3.5 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white font-semibold rounded-xl transition-colors text-base gap-2"
